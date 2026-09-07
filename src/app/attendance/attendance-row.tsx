@@ -15,10 +15,11 @@ type Row = {
   clockOut: Date | null;
 };
 
-export function AttendanceRow({ row }: { row: Row }) {
+export function AttendanceRow({ row, editable }: { row: Row; editable: boolean }) {
   const [isPending, startTransition] = useTransition();
   const hoursMs =
     row.clockIn && row.clockOut ? new Date(row.clockOut).getTime() - new Date(row.clockIn).getTime() : null;
+  const disabled = isPending || !editable;
 
   return (
     <tr className="border-t border-[var(--border)]">
@@ -39,7 +40,7 @@ export function AttendanceRow({ row }: { row: Row }) {
           <select
             className="text-xs border border-[var(--border)] rounded-md px-2 py-1 bg-[var(--surface)] text-[var(--foreground)] disabled:opacity-50"
             value={row.workMode}
-            disabled={isPending}
+            disabled={disabled}
             onChange={(e) =>
               startTransition(() => setWorkMode(row.employeeId, e.target.value as "OFFICE" | "WFH"))
             }
@@ -58,7 +59,7 @@ export function AttendanceRow({ row }: { row: Row }) {
         <div className="flex items-center justify-end gap-2">
           {row.status === "PRESENT" && !row.clockIn && (
             <button
-              disabled={isPending}
+              disabled={disabled}
               onClick={() => startTransition(() => clockIn(row.employeeId))}
               className="text-xs font-medium px-2.5 py-1 rounded-md bg-[var(--accent)] text-black disabled:opacity-50"
             >
@@ -67,7 +68,7 @@ export function AttendanceRow({ row }: { row: Row }) {
           )}
           {row.status === "PRESENT" && row.clockIn && !row.clockOut && (
             <button
-              disabled={isPending}
+              disabled={disabled}
               onClick={() => startTransition(() => clockOut(row.employeeId))}
               className="text-xs font-medium px-2.5 py-1 rounded-md border border-[var(--foreground)] text-[var(--foreground)] disabled:opacity-50"
             >
@@ -75,7 +76,7 @@ export function AttendanceRow({ row }: { row: Row }) {
             </button>
           )}
           <button
-            disabled={isPending}
+            disabled={disabled}
             onClick={() => startTransition(() => setLeave(row.employeeId, row.status !== "LEAVE"))}
             className="text-xs font-medium px-2.5 py-1 rounded-md border border-[var(--border)] disabled:opacity-50"
           >

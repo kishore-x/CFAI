@@ -3,8 +3,12 @@ export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/db";
 import { Card, StageBadge, Avatar } from "@/lib/ui";
 import { ProjectControls } from "./project-controls";
+import { auth } from "@/lib/auth";
 
 export default async function ProjectsPage() {
+  const session = await auth();
+  const canManage = session?.user?.role === "OWNER" || session?.user?.role === "MANAGER";
+
   const projects = await prisma.project.findMany({
     include: {
       assignments: { include: { employee: true } },
@@ -34,7 +38,7 @@ export default async function ProjectsPage() {
                   {p.client && <div className="text-xs text-[var(--muted)] mt-0.5">{p.client}</div>}
                   {p.description && <div className="text-sm text-[var(--muted)] mt-2">{p.description}</div>}
                 </div>
-                <ProjectControls projectId={p.id} stage={p.stage} progress={p.progress} />
+                {canManage && <ProjectControls projectId={p.id} stage={p.stage} progress={p.progress} />}
               </div>
 
               <div className="mt-4 h-1.5 rounded-full bg-white/10 overflow-hidden">

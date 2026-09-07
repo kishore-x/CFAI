@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/db";
 import { Card } from "@/lib/ui";
 import { AttendanceRow } from "./attendance-row";
+import { auth } from "@/lib/auth";
 
 function startOfDay(d: Date) {
   const c = new Date(d);
@@ -11,6 +12,10 @@ function startOfDay(d: Date) {
 }
 
 export default async function AttendancePage() {
+  const session = await auth();
+  const currentUserId = session?.user?.id;
+  const canManage = session?.user?.role === "OWNER" || session?.user?.role === "MANAGER";
+
   const today = startOfDay(new Date());
   const employees = await prisma.employee.findMany({
     where: { active: true },
@@ -56,7 +61,11 @@ export default async function AttendancePage() {
           </thead>
           <tbody>
             {rows.map((row) => (
-              <AttendanceRow key={row.employeeId} row={row} />
+              <AttendanceRow
+                key={row.employeeId}
+                row={row}
+                editable={canManage || row.employeeId === currentUserId}
+              />
             ))}
           </tbody>
         </table>

@@ -8,9 +8,9 @@ datasource db {
 }
 
 enum Role {
-  ADMIN
+  OWNER
   MANAGER
-  EMPLOYEE
+  DEVELOPER
 }
 
 enum WorkMode {
@@ -52,6 +52,10 @@ model Employee {
   joinedAt      DateTime @default(now())
   active        Boolean  @default(true)
   avatarColor   String   @default("#6366f1")
+
+  role          Role     @default(DEVELOPER)
+  passwordHash  String
+  mustChangePassword Boolean @default(true)
 
   // Dev account references — identifiers/links only, never credentials
   githubUsername   String?

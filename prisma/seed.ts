@@ -1,6 +1,7 @@
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import "dotenv/config";
+import { hashPassword, generateTempPassword } from "../src/lib/password";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -19,21 +20,29 @@ async function main() {
   await prisma.leaveRequest.deleteMany();
   await prisma.employee.deleteMany();
 
-  const colors = ["#6366f1", "#0ea5e9", "#f97316", "#10b981", "#ec4899", "#a855f7"];
+  const colors = ["#6366f1", "#0ea5e9", "#f97316", "#10b981", "#ec4899", "#a855f7", "#84cc16"];
+
+  const roster = [
+    { name: "Kishore", email: "clickfieldai@gmail.com", title: "Founder", department: "Leadership", role: "OWNER" as const, githubUsername: "kishore-x", claudeAccountLabel: "kishore-primary", vercelUsername: "kishore-x" },
+    { name: "Ashwin", email: "ashwin@clickfieldai.com", title: "Co-founder", department: "Leadership", role: "OWNER" as const, githubUsername: "ashwin", claudeAccountLabel: "ashwin-primary", vercelUsername: "ashwin" },
+    { name: "Sneha Iyer", email: "sneha@clickfieldai.com", title: "Project Manager", department: "Operations", role: "MANAGER" as const, githubUsername: "sneha-i", claudeAccountLabel: "ops-seat-1", vercelUsername: null },
+    { name: "Ananya Rao", email: "ananya@clickfieldai.com", title: "Full-stack Developer", department: "Engineering", role: "DEVELOPER" as const, githubUsername: "ananya-dev", claudeAccountLabel: "eng-seat-1", vercelUsername: "ananya-rao" },
+    { name: "Rahul Mehta", email: "rahul@clickfieldai.com", title: "Frontend Developer", department: "Engineering", role: "DEVELOPER" as const, githubUsername: "rahulm", claudeAccountLabel: "eng-seat-2", vercelUsername: "rahul-mehta" },
+    { name: "Priya Nair", email: "priya@clickfieldai.com", title: "UI/UX Designer", department: "Design", role: "DEVELOPER" as const, githubUsername: "priyan", claudeAccountLabel: "design-seat-1", vercelUsername: "priya-nair" },
+    { name: "Vikram Singh", email: "vikram@clickfieldai.com", title: "Backend Developer", department: "Engineering", role: "DEVELOPER" as const, githubUsername: "vikrams", claudeAccountLabel: "eng-seat-3", vercelUsername: "vikram-singh" },
+  ];
+
+  const credentials: { name: string; email: string; role: string; password: string }[] = [];
 
   const employees = await Promise.all(
-    [
-      { name: "Kishore", email: "clickfieldai@gmail.com", title: "Founder", department: "Leadership", githubUsername: "kishore-x", claudeAccountLabel: "kishore-primary", vercelUsername: "kishore-x" },
-      { name: "Ananya Rao", email: "ananya@clickfieldai.com", title: "Full-stack Developer", department: "Engineering", githubUsername: "ananya-dev", claudeAccountLabel: "eng-seat-1", vercelUsername: "ananya-rao" },
-      { name: "Rahul Mehta", email: "rahul@clickfieldai.com", title: "Frontend Developer", department: "Engineering", githubUsername: "rahulm", claudeAccountLabel: "eng-seat-2", vercelUsername: "rahul-mehta" },
-      { name: "Priya Nair", email: "priya@clickfieldai.com", title: "UI/UX Designer", department: "Design", githubUsername: "priyan", claudeAccountLabel: "design-seat-1", vercelUsername: "priya-nair" },
-      { name: "Vikram Singh", email: "vikram@clickfieldai.com", title: "Backend Developer", department: "Engineering", githubUsername: "vikrams", claudeAccountLabel: "eng-seat-3", vercelUsername: "vikram-singh" },
-      { name: "Sneha Iyer", email: "sneha@clickfieldai.com", title: "Project Manager", department: "Operations", githubUsername: "sneha-i", claudeAccountLabel: "ops-seat-1", vercelUsername: null },
-    ].map((e, i) =>
-      prisma.employee.create({
-        data: { ...e, avatarColor: colors[i % colors.length] },
-      })
-    )
+    roster.map(async (e, i) => {
+      const tempPassword = generateTempPassword();
+      credentials.push({ name: e.name, email: e.email, role: e.role, password: tempPassword });
+      const passwordHash = await hashPassword(tempPassword);
+      return prisma.employee.create({
+        data: { ...e, avatarColor: colors[i % colors.length], passwordHash, mustChangePassword: true },
+      });
+    })
   );
 
   const projects = await Promise.all([
@@ -88,7 +97,7 @@ async function main() {
   ]);
 
   const [dataAnalyzer, tostem, laneFertility, leadAgent] = projects;
-  const [kishore, ananya, rahul, priya, vikram, sneha] = employees;
+  const [kishore, , sneha, ananya, rahul, priya, vikram] = employees;
 
   await prisma.projectAssignment.createMany({
     data: [
@@ -150,10 +159,10 @@ async function main() {
     },
   });
 
-  console.log("Seed complete:", {
-    employees: employees.length,
-    projects: projects.length,
-  });
+  console.log("\nSeed complete:", { employees: employees.length, projects: projects.length });
+  console.log("\n=== TEMPORARY LOGIN CREDENTIALS (share once, then delete this output) ===");
+  console.table(credentials);
+  console.log("Everyone will be forced to set a new password on first login.\n");
 }
 
 main()
