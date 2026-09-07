@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum WorkMode {
+  OFFICE
+  WFH
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LEAVE
+  HOLIDAY
+  WEEKEND
+}
+
+enum ProjectStage {
+  PLANNING
+  DESIGN
+  DEVELOPMENT
+  TESTING
+  DEPLOYED
+  MAINTENANCE
+  ON_HOLD
+}
+
+enum AssignmentRole {
+  LEAD
+  DEVELOPER
+  DESIGNER
+  QA
+  CONTRIBUTOR
+}
+
+model Employee {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  title         String?
+  department    String?
+  joinedAt      DateTime @default(now())
+  active        Boolean  @default(true)
+  avatarColor   String   @default("#6366f1")
+
+  // Dev account references — identifiers/links only, never credentials
+  githubUsername   String?
+  claudeAccountLabel String?
+  vercelUsername   String?
+
+  attendance    Attendance[]
+  assignments   ProjectAssignment[]
+  leaves        LeaveRequest[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Attendance {
+  id          String            @id @default(cuid())
+  employee    Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId  String
+  date        DateTime          // day this record applies to (date-only, stored at midnight)
+  status      AttendanceStatus  @default(PRESENT)
+  workMode    WorkMode          @default(OFFICE)
+  clockIn     DateTime?
+  clockOut    DateTime?
+  note        String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([employeeId, date])
+}
+
+model LeaveRequest {
+  id          String   @id @default(cuid())
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId  String
+  startDate   DateTime
+  endDate     DateTime
+  reason      String?
+  approved    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  client      String?
+  description String?
+  stage       ProjectStage  @default(PLANNING)
+  progress    Int           @default(0) // 0-100
+  deadline    DateTime?
+  githubRepoUrl String?
+  vercelProjectUrl String?
+
+  assignments ProjectAssignment[]
+  tasks       Task[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ProjectAssignment {
+  id          String         @id @default(cuid())
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String
+  employee    Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId  String
+  role        AssignmentRole @default(CONTRIBUTOR)
+
+  // Per-assignment dev-account context (optional override of employee defaults)
+  githubRepoUrl     String?
+  vercelProjectUrl  String?
+
+  assignedAt  DateTime @default(now())
+
+  @@unique([projectId, employeeId])
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String
+  title       String
+  status      String   @default("TODO") // TODO, IN_PROGRESS, DONE
+  createdAt   DateTime @default(now())
+}
