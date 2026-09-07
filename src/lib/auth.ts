@@ -48,5 +48,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
+    Credentials({
+      id: "mock",
+      name: "Quick login",
+      credentials: {
+        employeeId: { label: "Employee", type: "text" },
+      },
+      authorize: async (credentials) => {
+        const employeeId = credentials?.employeeId as string | undefined;
+        if (!employeeId) return null;
+
+        const employee = await prisma.employee.findUnique({ where: { id: employeeId } });
+        if (!employee || !employee.active) return null;
+
+        return {
+          id: employee.id,
+          name: employee.name,
+          email: employee.email,
+          role: employee.role,
+          // Quick logins skip the forced password reset so the one-click flow
+          // actually lands on the dashboard immediately.
+          mustChangePassword: false,
+        };
+      },
+    }),
   ],
 });
