@@ -6,7 +6,7 @@ import { AttendanceRow } from "./attendance-row";
 
 function startOfDay(d: Date) {
   const c = new Date(d);
-  c.setHours(0, 0, 0, 0);
+  c.setUTCHours(0, 0, 0, 0);
   return c;
 }
 

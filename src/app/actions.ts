@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 
 function startOfDay(d: Date) {
   const c = new Date(d);
-  c.setHours(0, 0, 0, 0);
+  c.setUTCHours(0, 0, 0, 0);
   return c;
 }
 

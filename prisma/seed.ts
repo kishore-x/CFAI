@@ -7,7 +7,7 @@ const prisma = new PrismaClient({ adapter });
 
 function startOfDay(d: Date) {
   const copy = new Date(d);
-  copy.setHours(0, 0, 0, 0);
+  copy.setUTCHours(0, 0, 0, 0);
   return copy;
 }
 
