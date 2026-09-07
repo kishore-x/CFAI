@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { changePassword } from "@/app/actions";
 
 export default function ChangePasswordPage() {
-  const router = useRouter();
-  const { update } = useSession();
+  const { data: session } = useSession();
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -28,9 +26,23 @@ export default function ChangePasswordPage() {
       setLoading(false);
       return;
     }
-    await update();
-    router.push("/");
-    router.refresh();
+
+    // Re-authenticate with the new password to get a fresh session token
+    // (mustChangePassword is baked into the JWT at sign-in time, so a stale
+    // token would otherwise keep redirecting back here even after the DB
+    // update succeeds).
+    const email = session?.user?.email;
+    if (email) {
+      const signInResult = await signIn("credentials", { email, password: next, redirect: false });
+      if (signInResult?.error) {
+        setError("Password was saved, but re-signing in failed. Please sign in again.");
+        setLoading(false);
+        return;
+      }
+    }
+    // Hard navigation: avoids a race where the client router follows through
+    // to "/" before the browser has applied the freshly-set session cookie.
+    window.location.href = "/";
   }
 
   return (
