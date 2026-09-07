@@ -1,6 +1,6 @@
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm ${className}`}>
+    <div className={`rounded-xl border border-[var(--border)] bg-[var(--surface)] ${className}`}>
       {children}
     </div>
   );
@@ -9,47 +9,55 @@ export function Card({ children, className = "" }: { children: React.ReactNode; 
 export function StatCard({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
   return (
     <Card className="p-5">
-      <div className="text-sm text-gray-500">{label}</div>
+      <div className="text-sm text-[var(--muted)]">{label}</div>
       <div className="mt-1 text-3xl font-semibold tracking-tight">{value}</div>
-      {hint && <div className="mt-1 text-xs text-gray-400">{hint}</div>}
+      {hint && <div className="mt-1 text-xs text-[var(--muted)]">{hint}</div>}
     </Card>
   );
 }
 
 const STAGE_STYLES: Record<string, string> = {
-  PLANNING: "bg-gray-100 text-gray-700",
-  DESIGN: "bg-purple-100 text-purple-700",
-  DEVELOPMENT: "bg-blue-100 text-blue-700",
-  TESTING: "bg-amber-100 text-amber-700",
-  DEPLOYED: "bg-emerald-100 text-emerald-700",
-  MAINTENANCE: "bg-teal-100 text-teal-700",
-  ON_HOLD: "bg-red-100 text-red-700",
+  PLANNING: "border border-[var(--border)] text-[var(--muted)]",
+  DESIGN: "border border-black/40 text-[var(--foreground)]",
+  DEVELOPMENT: "bg-gray-200 text-black",
+  TESTING: "bg-gray-500 text-white",
+  DEPLOYED: "bg-black text-white",
+  MAINTENANCE: "border border-dashed border-black/40 text-[var(--foreground)]",
+  ON_HOLD: "border border-dashed border-[var(--border)] text-[var(--muted)] line-through",
 };
 
 export function StageBadge({ stage }: { stage: string }) {
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STAGE_STYLES[stage] ?? "bg-gray-100 text-gray-700"}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STAGE_STYLES[stage] ?? "border border-[var(--border)]"}`}>
       {stage.replace("_", " ")}
     </span>
   );
 }
 
 const ATTENDANCE_STYLES: Record<string, string> = {
-  PRESENT: "bg-emerald-100 text-emerald-700",
-  LEAVE: "bg-red-100 text-red-700",
-  HOLIDAY: "bg-blue-100 text-blue-700",
-  WEEKEND: "bg-gray-100 text-gray-700",
+  PRESENT: "bg-black text-white",
+  LEAVE: "border border-[var(--foreground)] text-[var(--foreground)]",
+  HOLIDAY: "bg-gray-200 text-black",
+  WEEKEND: "border border-dashed border-[var(--border)] text-[var(--muted)]",
 };
 
 export function AttendanceBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ATTENDANCE_STYLES[status] ?? "bg-gray-100 text-gray-700"}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ATTENDANCE_STYLES[status] ?? "border border-[var(--border)]"}`}>
       {status}
     </span>
   );
 }
 
-export function Avatar({ name, color }: { name: string; color: string }) {
+const AVATAR_SHADES = ["#0a0a0a", "#262626", "#404040", "#525252", "#6b6b6b"];
+
+function shadeFor(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  return AVATAR_SHADES[hash % AVATAR_SHADES.length];
+}
+
+export function Avatar({ name }: { name: string; color?: string }) {
   const initials = name
     .split(" ")
     .map((p) => p[0])
@@ -59,7 +67,7 @@ export function Avatar({ name, color }: { name: string; color: string }) {
   return (
     <div
       className="h-9 w-9 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0"
-      style={{ backgroundColor: color }}
+      style={{ backgroundColor: shadeFor(name) }}
     >
       {initials}
     </div>

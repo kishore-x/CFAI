@@ -53,7 +53,7 @@ export default async function EmployeesPage() {
                     {e.assignments.map((a) => (
                       <span
                         key={a.id}
-                        className="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700"
+                        className="text-xs px-2 py-0.5 rounded-full border border-[var(--border)] text-[var(--foreground)]"
                       >
                         {a.project.name}
                       </span>
