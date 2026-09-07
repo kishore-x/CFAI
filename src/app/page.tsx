@@ -38,7 +38,7 @@ export default async function OverviewPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-[var(--muted)] mt-1">
           {new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </p>
       </div>
@@ -68,12 +68,12 @@ export default async function OverviewPage() {
                     <Avatar name={e.name} color={e.avatarColor} />
                     <div className="min-w-0">
                       <div className="text-sm font-medium truncate">{e.name}</div>
-                      <div className="text-xs text-gray-500 truncate">{e.title}</div>
+                      <div className="text-xs text-[var(--muted)] truncate">{e.title}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {a?.status === "PRESENT" && (
-                      <span className="text-xs text-gray-400">{a.workMode === "WFH" ? "WFH" : "Office"}</span>
+                      <span className="text-xs text-[var(--muted)]">{a.workMode === "WFH" ? "WFH" : "Office"}</span>
                     )}
                     <AttendanceBadge status={status} />
                   </div>
@@ -99,13 +99,13 @@ export default async function OverviewPage() {
                     <span className="text-sm font-medium truncate">{p.name}</span>
                     <StageBadge stage={p.stage} />
                   </div>
-                  <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                  <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
                     <div
                       className="h-full rounded-full bg-[var(--accent)]"
                       style={{ width: `${p.progress}%` }}
                     />
                   </div>
-                  <div className="mt-1 flex items-center justify-between text-xs text-gray-400">
+                  <div className="mt-1 flex items-center justify-between text-xs text-[var(--muted)]">
                     <span>
                       {p.assignments.length} on team · {done}/{p.tasks.length} tasks done
                     </span>

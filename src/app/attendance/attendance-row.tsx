@@ -27,7 +27,7 @@ export function AttendanceRow({ row }: { row: Row }) {
           <Avatar name={row.name} color={row.avatarColor} />
           <div>
             <div className="text-sm font-medium">{row.name}</div>
-            <div className="text-xs text-gray-500">{row.title}</div>
+            <div className="text-xs text-[var(--muted)]">{row.title}</div>
           </div>
         </div>
       </td>
@@ -37,7 +37,7 @@ export function AttendanceRow({ row }: { row: Row }) {
       <td className="py-3 pr-4">
         {row.status === "PRESENT" ? (
           <select
-            className="text-xs border border-[var(--border)] rounded-md px-2 py-1 bg-white disabled:opacity-50"
+            className="text-xs border border-[var(--border)] rounded-md px-2 py-1 bg-[var(--surface)] text-[var(--foreground)] disabled:opacity-50"
             value={row.workMode}
             disabled={isPending}
             onChange={(e) =>
@@ -48,19 +48,19 @@ export function AttendanceRow({ row }: { row: Row }) {
             <option value="WFH">WFH</option>
           </select>
         ) : (
-          <span className="text-xs text-gray-400">—</span>
+          <span className="text-xs text-[var(--muted)]">—</span>
         )}
       </td>
-      <td className="py-3 pr-4 text-sm text-gray-700">{fmtTime(row.clockIn)}</td>
-      <td className="py-3 pr-4 text-sm text-gray-700">{fmtTime(row.clockOut)}</td>
-      <td className="py-3 pr-4 text-sm text-gray-700">{hoursMs !== null ? fmtHours(hoursMs) : "—"}</td>
+      <td className="py-3 pr-4 text-sm text-[var(--foreground)]">{fmtTime(row.clockIn)}</td>
+      <td className="py-3 pr-4 text-sm text-[var(--foreground)]">{fmtTime(row.clockOut)}</td>
+      <td className="py-3 pr-4 text-sm text-[var(--foreground)]">{hoursMs !== null ? fmtHours(hoursMs) : "—"}</td>
       <td className="py-3 text-right">
         <div className="flex items-center justify-end gap-2">
           {row.status === "PRESENT" && !row.clockIn && (
             <button
               disabled={isPending}
               onClick={() => startTransition(() => clockIn(row.employeeId))}
-              className="text-xs font-medium px-2.5 py-1 rounded-md bg-[var(--accent)] text-white disabled:opacity-50"
+              className="text-xs font-medium px-2.5 py-1 rounded-md bg-[var(--accent)] text-black disabled:opacity-50"
             >
               Clock in
             </button>
@@ -69,7 +69,7 @@ export function AttendanceRow({ row }: { row: Row }) {
             <button
               disabled={isPending}
               onClick={() => startTransition(() => clockOut(row.employeeId))}
-              className="text-xs font-medium px-2.5 py-1 rounded-md bg-gray-800 text-white disabled:opacity-50"
+              className="text-xs font-medium px-2.5 py-1 rounded-md border border-[var(--foreground)] text-[var(--foreground)] disabled:opacity-50"
             >
               Clock out
             </button>

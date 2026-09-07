@@ -18,11 +18,11 @@ export function StatCard({ label, value, hint }: { label: string; value: string 
 
 const STAGE_STYLES: Record<string, string> = {
   PLANNING: "border border-[var(--border)] text-[var(--muted)]",
-  DESIGN: "border border-black/40 text-[var(--foreground)]",
-  DEVELOPMENT: "bg-gray-200 text-black",
-  TESTING: "bg-gray-500 text-white",
-  DEPLOYED: "bg-black text-white",
-  MAINTENANCE: "border border-dashed border-black/40 text-[var(--foreground)]",
+  DESIGN: "border border-white/40 text-[var(--foreground)]",
+  DEVELOPMENT: "bg-gray-700 text-white",
+  TESTING: "bg-gray-400 text-black",
+  DEPLOYED: "bg-white text-black",
+  MAINTENANCE: "border border-dashed border-white/40 text-[var(--foreground)]",
   ON_HOLD: "border border-dashed border-[var(--border)] text-[var(--muted)] line-through",
 };
 
@@ -35,9 +35,9 @@ export function StageBadge({ stage }: { stage: string }) {
 }
 
 const ATTENDANCE_STYLES: Record<string, string> = {
-  PRESENT: "bg-black text-white",
+  PRESENT: "bg-white text-black",
   LEAVE: "border border-[var(--foreground)] text-[var(--foreground)]",
-  HOLIDAY: "bg-gray-200 text-black",
+  HOLIDAY: "bg-gray-400 text-black",
   WEEKEND: "border border-dashed border-[var(--border)] text-[var(--muted)]",
 };
 
@@ -49,7 +49,7 @@ export function AttendanceBadge({ status }: { status: string }) {
   );
 }
 
-const AVATAR_SHADES = ["#0a0a0a", "#262626", "#404040", "#525252", "#6b6b6b"];
+const AVATAR_SHADES = ["#e5e5e5", "#c4c4c4", "#a3a3a3", "#868686", "#6b6b6b"];
 
 function shadeFor(name: string) {
   let hash = 0;
@@ -66,7 +66,7 @@ export function Avatar({ name }: { name: string; color?: string }) {
     .toUpperCase();
   return (
     <div
-      className="h-9 w-9 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0"
+      className="h-9 w-9 rounded-full flex items-center justify-center text-black text-xs font-semibold shrink-0"
       style={{ backgroundColor: shadeFor(name) }}
     >
       {initials}

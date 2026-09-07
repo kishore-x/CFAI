@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="border-b border-[var(--border)] bg-[var(--surface)] sticky top-0 z-10">
           <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-[var(--accent)] flex items-center justify-center text-white font-bold text-sm">
+              <div className="h-8 w-8 rounded-lg bg-[var(--accent)] flex items-center justify-center text-black font-bold text-sm">
                 CF
               </div>
               <span className="font-semibold tracking-tight">ClickfieldAI Hub</span>
@@ -42,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-[var(--foreground)] transition-colors"
+                  className="px-3 py-1.5 rounded-md text-sm font-medium text-[var(--muted)] hover:bg-white/10 hover:text-[var(--foreground)] transition-colors"
                 >
                   {item.label}
                 </Link>

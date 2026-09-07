@@ -36,7 +36,7 @@ export default async function AttendancePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Attendance</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-[var(--muted)] mt-1">
           {today.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </p>
       </div>
@@ -44,7 +44,7 @@ export default async function AttendancePage() {
       <Card className="p-5 overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="text-xs uppercase tracking-wide text-gray-400">
+            <tr className="text-xs uppercase tracking-wide text-[var(--muted)]">
               <th className="pb-2 font-medium">Employee</th>
               <th className="pb-2 font-medium">Status</th>
               <th className="pb-2 font-medium">Mode</th>

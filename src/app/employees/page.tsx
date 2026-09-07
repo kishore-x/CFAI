@@ -15,7 +15,7 @@ export default async function EmployeesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Employees</h1>
-          <p className="text-sm text-gray-500 mt-1">{employees.length} active team members</p>
+          <p className="text-sm text-[var(--muted)] mt-1">{employees.length} active team members</p>
         </div>
       </div>
 
@@ -28,22 +28,22 @@ export default async function EmployeesPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-medium">{e.name}</div>
-                    <div className="text-xs text-gray-500">{e.title} · {e.department}</div>
+                    <div className="text-xs text-[var(--muted)]">{e.title} · {e.department}</div>
                   </div>
                 </div>
-                <div className="text-xs text-gray-400 mt-1">{e.email}</div>
+                <div className="text-xs text-[var(--muted)] mt-1">{e.email}</div>
 
                 <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                  <div className="rounded-md bg-gray-50 px-2 py-1.5">
-                    <div className="text-gray-400">GitHub</div>
+                  <div className="rounded-md bg-white/5 px-2 py-1.5">
+                    <div className="text-[var(--muted)]">GitHub</div>
                     <div className="font-medium truncate">{e.githubUsername ?? "—"}</div>
                   </div>
-                  <div className="rounded-md bg-gray-50 px-2 py-1.5">
-                    <div className="text-gray-400">Vercel</div>
+                  <div className="rounded-md bg-white/5 px-2 py-1.5">
+                    <div className="text-[var(--muted)]">Vercel</div>
                     <div className="font-medium truncate">{e.vercelUsername ?? "—"}</div>
                   </div>
-                  <div className="rounded-md bg-gray-50 px-2 py-1.5">
-                    <div className="text-gray-400">Claude</div>
+                  <div className="rounded-md bg-white/5 px-2 py-1.5">
+                    <div className="text-[var(--muted)]">Claude</div>
                     <div className="font-medium truncate">{e.claudeAccountLabel ?? "—"}</div>
                   </div>
                 </div>

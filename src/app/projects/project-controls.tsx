@@ -11,7 +11,7 @@ export function ProjectControls({ projectId, stage, progress }: { projectId: str
   return (
     <div className="flex items-center gap-3">
       <select
-        className="text-xs border border-[var(--border)] rounded-md px-2 py-1 bg-white disabled:opacity-50"
+        className="text-xs border border-[var(--border)] rounded-md px-2 py-1 bg-[var(--surface)] text-[var(--foreground)] disabled:opacity-50"
         value={stage}
         disabled={isPending}
         onChange={(e) => startTransition(() => updateProjectStage(projectId, e.target.value))}
@@ -31,7 +31,7 @@ export function ProjectControls({ projectId, stage, progress }: { projectId: str
         onChange={(e) => startTransition(() => updateProjectProgress(projectId, Number(e.target.value)))}
         className="w-28 accent-[var(--accent)]"
       />
-      <span className="text-xs text-gray-400 w-9">{progress}%</span>
+      <span className="text-xs text-[var(--muted)] w-9">{progress}%</span>
     </div>
   );
 }

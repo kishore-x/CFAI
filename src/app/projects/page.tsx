@@ -17,7 +17,7 @@ export default async function ProjectsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
-        <p className="text-sm text-gray-500 mt-1">{projects.length} projects tracked</p>
+        <p className="text-sm text-[var(--muted)] mt-1">{projects.length} projects tracked</p>
       </div>
 
       <div className="space-y-4">
@@ -31,17 +31,17 @@ export default async function ProjectsPage() {
                     <h2 className="font-semibold">{p.name}</h2>
                     <StageBadge stage={p.stage} />
                   </div>
-                  {p.client && <div className="text-xs text-gray-500 mt-0.5">{p.client}</div>}
-                  {p.description && <div className="text-sm text-gray-600 mt-2">{p.description}</div>}
+                  {p.client && <div className="text-xs text-[var(--muted)] mt-0.5">{p.client}</div>}
+                  {p.description && <div className="text-sm text-[var(--muted)] mt-2">{p.description}</div>}
                 </div>
                 <ProjectControls projectId={p.id} stage={p.stage} progress={p.progress} />
               </div>
 
-              <div className="mt-4 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+              <div className="mt-4 h-1.5 rounded-full bg-white/10 overflow-hidden">
                 <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${p.progress}%` }} />
               </div>
 
-              <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-gray-500">
+              <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-[var(--muted)]">
                 {p.deadline && <span>Deadline: {new Date(p.deadline).toLocaleDateString("en-GB")}</span>}
                 <span>{done}/{p.tasks.length} tasks done</span>
                 {p.githubRepoUrl && (
@@ -59,11 +59,11 @@ export default async function ProjectsPage() {
               {p.assignments.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-3">
                   {p.assignments.map((a) => (
-                    <div key={a.id} className="flex items-center gap-2 rounded-md bg-gray-50 pl-1.5 pr-3 py-1.5">
+                    <div key={a.id} className="flex items-center gap-2 rounded-md bg-white/5 pl-1.5 pr-3 py-1.5">
                       <Avatar name={a.employee.name} color={a.employee.avatarColor} />
                       <div className="text-xs">
                         <div className="font-medium">{a.employee.name}</div>
-                        <div className="text-gray-400">{a.role}</div>
+                        <div className="text-[var(--muted)]">{a.role}</div>
                       </div>
                     </div>
                   ))}
