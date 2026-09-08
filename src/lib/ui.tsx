@@ -16,22 +16,47 @@ export function StatCard({ label, value, hint }: { label: string; value: string 
   );
 }
 
-const STAGE_STYLES: Record<string, string> = {
+const PROJECT_STATUS_STYLES: Record<string, string> = {
   PLANNING: "border border-[var(--border)] text-[var(--muted)]",
-  DESIGN: "border border-white/40 text-[var(--foreground)]",
-  DEVELOPMENT: "bg-gray-700 text-white",
-  TESTING: "bg-gray-400 text-black",
-  DEPLOYED: "bg-white text-black",
-  MAINTENANCE: "border border-dashed border-white/40 text-[var(--foreground)]",
+  ACTIVE: "bg-gray-700 text-white",
   ON_HOLD: "border border-dashed border-[var(--border)] text-[var(--muted)] line-through",
+  COMPLETED: "bg-white text-black",
+  CANCELLED: "border border-dashed border-white/40 text-[var(--muted)] line-through",
 };
 
-export function StageBadge({ stage }: { stage: string }) {
+export function ProjectStatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STAGE_STYLES[stage] ?? "border border-[var(--border)]"}`}>
-      {stage.replace("_", " ")}
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${PROJECT_STATUS_STYLES[status] ?? "border border-[var(--border)]"}`}>
+      {status.replace("_", " ")}
     </span>
   );
+}
+
+const TASK_STATUS_STYLES: Record<string, string> = {
+  TODO: "border border-[var(--border)] text-[var(--muted)]",
+  IN_PROGRESS: "bg-gray-700 text-white",
+  BLOCKED: "border border-white/50 text-white",
+  IN_REVIEW: "bg-gray-400 text-black",
+  COMPLETED: "bg-white text-black",
+};
+
+export function TaskStatusBadge({ status }: { status: string }) {
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${TASK_STATUS_STYLES[status] ?? "border border-[var(--border)]"}`}>
+      {status.replace("_", " ")}
+    </span>
+  );
+}
+
+const TASK_PRIORITY_STYLES: Record<string, string> = {
+  LOW: "text-[var(--muted)]",
+  MEDIUM: "text-[var(--foreground)]",
+  HIGH: "text-white font-semibold",
+  URGENT: "text-white font-semibold underline decoration-white/60",
+};
+
+export function TaskPriorityLabel({ priority }: { priority: string }) {
+  return <span className={`text-[11px] ${TASK_PRIORITY_STYLES[priority] ?? ""}`}>{priority}</span>;
 }
 
 const ATTENDANCE_STYLES: Record<string, string> = {

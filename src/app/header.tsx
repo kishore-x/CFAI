@@ -4,12 +4,26 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
-const NAV = [
-  { href: "/", label: "Overview" },
-  { href: "/attendance", label: "Attendance" },
-  { href: "/employees", label: "Employees" },
-  { href: "/projects", label: "Projects" },
-];
+const NAV_BY_ROLE: Record<string, { href: string; label: string }[]> = {
+  OWNER: [
+    { href: "/", label: "Dashboard" },
+    { href: "/employees", label: "Employees" },
+    { href: "/attendance", label: "Attendance" },
+    { href: "/projects", label: "Projects" },
+  ],
+  MANAGER: [
+    { href: "/", label: "Dashboard" },
+    { href: "/employees", label: "My Team" },
+    { href: "/projects", label: "My Projects" },
+    { href: "/attendance", label: "Attendance" },
+  ],
+  DEVELOPER: [
+    { href: "/", label: "Dashboard" },
+    { href: "/attendance", label: "My Attendance" },
+    { href: "/projects", label: "My Projects" },
+    { href: "/employees", label: "My Profile" },
+  ],
+};
 
 const ROLE_LABEL: Record<string, string> = {
   OWNER: "Owner",
@@ -19,6 +33,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 export function Header({ name, role }: { name: string; role: string }) {
   const pathname = usePathname();
+  const NAV = NAV_BY_ROLE[role] ?? NAV_BY_ROLE.DEVELOPER;
 
   return (
     <header className="border-b border-[var(--border)] bg-[var(--surface)] sticky top-0 z-10">

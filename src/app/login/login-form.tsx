@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useTransition } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Avatar } from "@/lib/ui";
 
 type RosterEntry = { id: string; name: string; role: string; title: string | null };
@@ -14,7 +14,6 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 function LoginForm({ roster }: { roster: RosterEntry[] }) {
-  const router = useRouter();
   const params = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

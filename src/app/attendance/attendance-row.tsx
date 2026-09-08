@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { clockIn, clockOut, setWorkMode, setLeave } from "@/app/actions";
 import { Avatar, AttendanceBadge, fmtTime, fmtHours } from "@/lib/ui";
 
@@ -8,30 +8,44 @@ type Row = {
   employeeId: string;
   name: string;
   title: string | null;
-  avatarColor: string;
   status: string;
   workMode: string;
   clockIn: Date | null;
   clockOut: Date | null;
+  project?: string | null;
 };
 
-export function AttendanceRow({ row, editable }: { row: Row; editable: boolean }) {
+export function AttendanceRow({ row, editable, showProject }: { row: Row; editable: boolean; showProject?: boolean }) {
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const hoursMs =
     row.clockIn && row.clockOut ? new Date(row.clockOut).getTime() - new Date(row.clockIn).getTime() : null;
   const disabled = isPending || !editable;
+
+  function run(fn: () => Promise<void>) {
+    setError(null);
+    startTransition(async () => {
+      try {
+        await fn();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Something went wrong");
+      }
+    });
+  }
 
   return (
     <tr className="border-t border-[var(--border)]">
       <td className="py-3 pr-4">
         <div className="flex items-center gap-3">
-          <Avatar name={row.name} color={row.avatarColor} />
+          <Avatar name={row.name} />
           <div>
             <div className="text-sm font-medium">{row.name}</div>
             <div className="text-xs text-[var(--muted)]">{row.title}</div>
+            {error && <div className="text-[11px] text-red-400">{error}</div>}
           </div>
         </div>
       </td>
+      {showProject && <td className="py-3 pr-4 text-sm text-[var(--muted)]">{row.project ?? "—"}</td>}
       <td className="py-3 pr-4">
         <AttendanceBadge status={row.status} />
       </td>
@@ -41,9 +55,7 @@ export function AttendanceRow({ row, editable }: { row: Row; editable: boolean }
             className="text-xs border border-[var(--border)] rounded-md px-2 py-1 bg-[var(--surface)] text-[var(--foreground)] disabled:opacity-50"
             value={row.workMode}
             disabled={disabled}
-            onChange={(e) =>
-              startTransition(() => setWorkMode(row.employeeId, e.target.value as "OFFICE" | "WFH"))
-            }
+            onChange={(e) => run(() => setWorkMode(row.employeeId, e.target.value as "OFFICE" | "WFH"))}
           >
             <option value="OFFICE">Office</option>
             <option value="WFH">WFH</option>
@@ -60,7 +72,7 @@ export function AttendanceRow({ row, editable }: { row: Row; editable: boolean }
           {row.status === "PRESENT" && !row.clockIn && (
             <button
               disabled={disabled}
-              onClick={() => startTransition(() => clockIn(row.employeeId))}
+              onClick={() => run(() => clockIn(row.employeeId))}
               className="text-xs font-medium px-2.5 py-1 rounded-md bg-[var(--accent)] text-black disabled:opacity-50"
             >
               Clock in
@@ -69,7 +81,7 @@ export function AttendanceRow({ row, editable }: { row: Row; editable: boolean }
           {row.status === "PRESENT" && row.clockIn && !row.clockOut && (
             <button
               disabled={disabled}
-              onClick={() => startTransition(() => clockOut(row.employeeId))}
+              onClick={() => run(() => clockOut(row.employeeId))}
               className="text-xs font-medium px-2.5 py-1 rounded-md border border-[var(--foreground)] text-[var(--foreground)] disabled:opacity-50"
             >
               Clock out
@@ -77,7 +89,7 @@ export function AttendanceRow({ row, editable }: { row: Row; editable: boolean }
           )}
           <button
             disabled={disabled}
-            onClick={() => startTransition(() => setLeave(row.employeeId, row.status !== "LEAVE"))}
+            onClick={() => run(() => setLeave(row.employeeId, row.status !== "LEAVE"))}
             className="text-xs font-medium px-2.5 py-1 rounded-md border border-[var(--border)] disabled:opacity-50"
           >
             {row.status === "LEAVE" ? "Mark present" : "Mark leave"}

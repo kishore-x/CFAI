@@ -2,8 +2,16 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { auth } from "@/lib/auth";
-import { hashPassword, verifyPassword } from "@/lib/password";
+import { hashPassword, verifyPassword, generateTempPassword } from "@/lib/password";
+import {
+  requireUser,
+  isOwner,
+  canManageAny,
+  canAccessEmployee,
+  assertCanManageProject,
+  assertOwner,
+  logActivity,
+} from "@/lib/authorize";
 
 function startOfDay(d: Date) {
   const c = new Date(d);
@@ -11,15 +19,7 @@ function startOfDay(d: Date) {
   return c;
 }
 
-async function requireSession() {
-  const session = await auth();
-  if (!session?.user) throw new Error("Not authenticated");
-  return session.user;
-}
-
-function canManage(role: string) {
-  return role === "OWNER" || role === "MANAGER";
-}
+// ---------- Attendance ----------
 
 async function getOrCreateTodayAttendance(employeeId: string) {
   const today = startOfDay(new Date());
@@ -33,40 +33,56 @@ async function getOrCreateTodayAttendance(employeeId: string) {
 }
 
 async function assertCanEditAttendance(employeeId: string) {
-  const user = await requireSession();
-  if (employeeId !== user.id && !canManage(user.role)) {
-    throw new Error("Not permitted to edit another employee's attendance");
+  const user = await requireUser();
+  if (employeeId === user.id) return user;
+  if (!(await canAccessEmployee(user, employeeId))) {
+    throw new Error("Not permitted to edit this employee's attendance");
   }
+  return user;
 }
 
-export async function clockIn(employeeId: string) {
-  await assertCanEditAttendance(employeeId);
+export async function clockIn(employeeId: string, note?: string) {
+  const user = await assertCanEditAttendance(employeeId);
+  const existing = await prisma.attendance.findUnique({
+    where: { employeeId_date: { employeeId, date: startOfDay(new Date()) } },
+  });
+  if (existing?.clockIn) throw new Error("Already checked in today");
+
   const record = await getOrCreateTodayAttendance(employeeId);
   await prisma.attendance.update({
     where: { id: record.id },
-    data: { clockIn: new Date(), status: "PRESENT" },
+    data: { clockIn: new Date(), status: "PRESENT", note: note || record.note },
   });
+  await logActivity({ actorId: user.id, action: "ATTENDANCE_CHECK_IN", entityType: "Employee", entityId: employeeId });
   revalidatePath("/attendance");
   revalidatePath("/");
 }
 
-export async function clockOut(employeeId: string) {
-  await assertCanEditAttendance(employeeId);
+export async function clockOut(employeeId: string, note?: string) {
+  const user = await assertCanEditAttendance(employeeId);
   const record = await getOrCreateTodayAttendance(employeeId);
+  if (!record.clockIn) throw new Error("Cannot check out before checking in");
+  if (record.clockOut) throw new Error("Already checked out today");
+
   await prisma.attendance.update({
     where: { id: record.id },
-    data: { clockOut: new Date() },
+    data: { clockOut: new Date(), note: note || record.note },
   });
+  await logActivity({ actorId: user.id, action: "ATTENDANCE_CHECK_OUT", entityType: "Employee", entityId: employeeId });
   revalidatePath("/attendance");
   revalidatePath("/");
 }
 
 export async function setWorkMode(employeeId: string, workMode: "OFFICE" | "WFH") {
-  await assertCanEditAttendance(employeeId);
+  const user = await assertCanEditAttendance(employeeId);
   const record = await getOrCreateTodayAttendance(employeeId);
-  await prisma.attendance.update({
-    where: { id: record.id },
-    data: { workMode },
+  await prisma.attendance.update({ where: { id: record.id }, data: { workMode } });
+  await logActivity({
+    actorId: user.id,
+    action: "ATTENDANCE_WORK_MODE",
+    entityType: "Employee",
+    entityId: employeeId,
+    metadata: { workMode },
   });
   revalidatePath("/attendance");
   revalidatePath("/");
@@ -77,39 +93,262 @@ export async function setLeave(employeeId: string, onLeave: boolean) {
   const record = await getOrCreateTodayAttendance(employeeId);
   await prisma.attendance.update({
     where: { id: record.id },
-    data: { status: onLeave ? "LEAVE" : "PRESENT", clockIn: onLeave ? null : record.clockIn, clockOut: onLeave ? null : record.clockOut },
+    data: {
+      status: onLeave ? "LEAVE" : "PRESENT",
+      clockIn: onLeave ? null : record.clockIn,
+      clockOut: onLeave ? null : record.clockOut,
+    },
   });
   revalidatePath("/attendance");
   revalidatePath("/");
 }
 
-export async function updateProjectStage(projectId: string, stage: string) {
-  const user = await requireSession();
-  if (!canManage(user.role)) throw new Error("Only owners and the project manager can change project stage");
-  await prisma.project.update({
-    where: { id: projectId },
-    data: { stage: stage as never },
+// ---------- Projects ----------
+
+export async function createProject(input: {
+  name: string;
+  client?: string;
+  description?: string;
+  deadline?: string;
+  managerId?: string;
+}) {
+  const user = await requireUser();
+  if (!canManageAny(user)) throw new Error("Only owners and project managers can create projects");
+
+  // A MANAGER creating a project automatically becomes its manager unless
+  // an OWNER explicitly assigns someone else.
+  const managerId = isOwner(user) ? input.managerId ?? null : user.id;
+
+  const project = await prisma.project.create({
+    data: {
+      name: input.name,
+      client: input.client,
+      description: input.description,
+      deadline: input.deadline ? new Date(input.deadline) : null,
+      managerId,
+    },
+  });
+  await logActivity({ actorId: user.id, action: "PROJECT_CREATED", entityType: "Project", entityId: project.id });
+  revalidatePath("/projects");
+  revalidatePath("/");
+  return project;
+}
+
+export async function updateProjectStatus(projectId: string, status: string) {
+  const user = await requireUser();
+  await assertCanManageProject(user, projectId);
+  await prisma.project.update({ where: { id: projectId }, data: { status: status as never } });
+  await logActivity({
+    actorId: user.id,
+    action: "PROJECT_STATUS_CHANGED",
+    entityType: "Project",
+    entityId: projectId,
+    metadata: { status },
   });
   revalidatePath("/projects");
   revalidatePath("/");
 }
 
-export async function updateProjectProgress(projectId: string, progress: number) {
-  const user = await requireSession();
-  if (!canManage(user.role)) throw new Error("Only owners and the project manager can change project progress");
-  await prisma.project.update({
-    where: { id: projectId },
-    data: { progress: Math.max(0, Math.min(100, progress)) },
+export async function updateProjectProgressOverride(projectId: string, progress: number | null) {
+  const user = await requireUser();
+  await assertCanManageProject(user, projectId);
+  const clamped = progress === null ? null : Math.max(0, Math.min(100, progress));
+  await prisma.project.update({ where: { id: projectId }, data: { progressOverride: clamped } });
+  revalidatePath("/projects");
+  revalidatePath("/");
+}
+
+export async function addProjectMember(projectId: string, employeeId: string, role: string) {
+  const user = await requireUser();
+  await assertCanManageProject(user, projectId);
+
+  await prisma.projectAssignment.upsert({
+    where: { projectId_employeeId: { projectId, employeeId } },
+    create: { projectId, employeeId, role: role as never, active: true },
+    update: { active: true, removedAt: null, role: role as never },
+  });
+  await logActivity({
+    actorId: user.id,
+    action: "PROJECT_MEMBER_ADDED",
+    entityType: "Project",
+    entityId: projectId,
+    metadata: { employeeId, role },
+  });
+  revalidatePath("/projects");
+  revalidatePath("/employees");
+  revalidatePath("/");
+}
+
+export async function removeProjectMember(projectId: string, employeeId: string) {
+  const user = await requireUser();
+  await assertCanManageProject(user, projectId);
+
+  await prisma.projectAssignment.update({
+    where: { projectId_employeeId: { projectId, employeeId } },
+    data: { active: false, removedAt: new Date() },
+  });
+  await logActivity({
+    actorId: user.id,
+    action: "PROJECT_MEMBER_REMOVED",
+    entityType: "Project",
+    entityId: projectId,
+    metadata: { employeeId },
+  });
+  revalidatePath("/projects");
+  revalidatePath("/employees");
+  revalidatePath("/");
+}
+
+// ---------- Tasks ----------
+
+export async function createTask(input: {
+  projectId: string;
+  title: string;
+  description?: string;
+  priority?: string;
+  assignedToId?: string;
+  dueDate?: string;
+}) {
+  const user = await requireUser();
+  await assertCanManageProject(user, input.projectId);
+
+  const task = await prisma.task.create({
+    data: {
+      projectId: input.projectId,
+      title: input.title,
+      description: input.description,
+      priority: (input.priority as never) ?? "MEDIUM",
+      assignedToId: input.assignedToId,
+      dueDate: input.dueDate ? new Date(input.dueDate) : null,
+      createdById: user.id,
+    },
+  });
+  await logActivity({
+    actorId: user.id,
+    action: "TASK_CREATED",
+    entityType: "Task",
+    entityId: task.id,
+    metadata: { projectId: input.projectId, assignedToId: input.assignedToId },
+  });
+  revalidatePath("/projects");
+  revalidatePath("/");
+  return task;
+}
+
+async function assertCanEditTask(taskId: string) {
+  const user = await requireUser();
+  const task = await prisma.task.findUniqueOrThrow({ where: { id: taskId } });
+  if (task.assignedToId === user.id) return { user, task };
+  await assertCanManageProject(user, task.projectId);
+  return { user, task };
+}
+
+export async function updateTaskStatus(taskId: string, status: string) {
+  const { user, task } = await assertCanEditTask(taskId);
+  await prisma.task.update({
+    where: { id: taskId },
+    data: { status: status as never, completedAt: status === "COMPLETED" ? new Date() : null },
+  });
+  await logActivity({
+    actorId: user.id,
+    action: "TASK_STATUS_CHANGED",
+    entityType: "Task",
+    entityId: taskId,
+    metadata: { status, projectId: task.projectId },
   });
   revalidatePath("/projects");
   revalidatePath("/");
 }
+
+export async function reassignTask(taskId: string, assignedToId: string | null, priority?: string, dueDate?: string | null) {
+  const user = await requireUser();
+  const task = await prisma.task.findUniqueOrThrow({ where: { id: taskId } });
+  await assertCanManageProject(user, task.projectId);
+
+  await prisma.task.update({
+    where: { id: taskId },
+    data: {
+      assignedToId,
+      ...(priority ? { priority: priority as never } : {}),
+      ...(dueDate !== undefined ? { dueDate: dueDate ? new Date(dueDate) : null } : {}),
+    },
+  });
+  await logActivity({
+    actorId: user.id,
+    action: "TASK_ASSIGNED",
+    entityType: "Task",
+    entityId: taskId,
+    metadata: { assignedToId, projectId: task.projectId },
+  });
+  revalidatePath("/projects");
+  revalidatePath("/");
+}
+
+// ---------- Employee management (OWNER only) ----------
+
+export async function createEmployee(input: {
+  name: string;
+  email: string;
+  title?: string;
+  department?: string;
+  role: string;
+}) {
+  const user = await requireUser();
+  await assertOwner(user);
+
+  const tempPassword = generateTempPassword();
+  const passwordHash = await hashPassword(tempPassword);
+  const employee = await prisma.employee.create({
+    data: {
+      name: input.name,
+      email: input.email.toLowerCase().trim(),
+      title: input.title,
+      department: input.department,
+      role: input.role as never,
+      passwordHash,
+      mustChangePassword: true,
+    },
+  });
+  await logActivity({ actorId: user.id, action: "EMPLOYEE_CREATED", entityType: "Employee", entityId: employee.id });
+  revalidatePath("/employees");
+  revalidatePath("/");
+  return { employee, tempPassword };
+}
+
+export async function updateEmployeeRole(employeeId: string, role: string) {
+  const user = await requireUser();
+  await assertOwner(user);
+  await prisma.employee.update({ where: { id: employeeId }, data: { role: role as never } });
+  await logActivity({
+    actorId: user.id,
+    action: "EMPLOYEE_ROLE_CHANGED",
+    entityType: "Employee",
+    entityId: employeeId,
+    metadata: { role },
+  });
+  revalidatePath("/employees");
+}
+
+export async function setEmployeeActive(employeeId: string, active: boolean) {
+  const user = await requireUser();
+  await assertOwner(user);
+  await prisma.employee.update({ where: { id: employeeId }, data: { active } });
+  await logActivity({
+    actorId: user.id,
+    action: active ? "EMPLOYEE_REACTIVATED" : "EMPLOYEE_DEACTIVATED",
+    entityType: "Employee",
+    entityId: employeeId,
+  });
+  revalidatePath("/employees");
+}
+
+// ---------- Account ----------
 
 export async function changePassword(
   currentPassword: string,
   newPassword: string
 ): Promise<{ error: string } | { error: null }> {
-  const user = await requireSession();
+  const user = await requireUser();
   const employee = await prisma.employee.findUniqueOrThrow({ where: { id: user.id } });
 
   const valid = await verifyPassword(currentPassword, employee.passwordHash);

@@ -25,14 +25,12 @@ enum AttendanceStatus {
   WEEKEND
 }
 
-enum ProjectStage {
+enum ProjectStatus {
   PLANNING
-  DESIGN
-  DEVELOPMENT
-  TESTING
-  DEPLOYED
-  MAINTENANCE
+  ACTIVE
   ON_HOLD
+  COMPLETED
+  CANCELLED
 }
 
 enum AssignmentRole {
@@ -41,6 +39,21 @@ enum AssignmentRole {
   DESIGNER
   QA
   CONTRIBUTOR
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  IN_REVIEW
+  COMPLETED
 }
 
 model Employee {
@@ -62,9 +75,13 @@ model Employee {
   claudeAccountLabel String?
   vercelUsername   String?
 
-  attendance    Attendance[]
-  assignments   ProjectAssignment[]
-  leaves        LeaveRequest[]
+  attendance      Attendance[]
+  assignments     ProjectAssignment[]
+  leaves          LeaveRequest[]
+  managedProjects Project[]      @relation("ProjectManager")
+  createdTasks    Task[]         @relation("TaskCreatedBy")
+  assignedTasks   Task[]         @relation("TaskAssignedTo")
+  activity        ActivityLog[]
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -104,11 +121,17 @@ model Project {
   name        String
   client      String?
   description String?
-  stage       ProjectStage  @default(PLANNING)
-  progress    Int           @default(0) // 0-100
+  status      ProjectStatus @default(PLANNING)
+  // Progress is computed from task completion by default; set this to
+  // override with a manual percentage (OWNER/MANAGER only).
+  progressOverride Int?
+  startDate   DateTime?
   deadline    DateTime?
   githubRepoUrl String?
   vercelProjectUrl String?
+
+  manager     Employee? @relation("ProjectManager", fields: [managerId], references: [id])
+  managerId   String?
 
   assignments ProjectAssignment[]
   tasks       Task[]
@@ -129,16 +152,43 @@ model ProjectAssignment {
   githubRepoUrl     String?
   vercelProjectUrl  String?
 
-  assignedAt  DateTime @default(now())
+  active      Boolean   @default(true)
+  assignedAt  DateTime  @default(now())
+  removedAt   DateTime?
 
   @@unique([projectId, employeeId])
 }
 
 model Task {
-  id          String   @id @default(cuid())
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id          String       @id @default(cuid())
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId   String
   title       String
-  status      String   @default("TODO") // TODO, IN_PROGRESS, DONE
+  description String?
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(TODO)
+  dueDate     DateTime?
+
+  assignedTo   Employee? @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
+  assignedToId String?
+  createdBy    Employee  @relation("TaskCreatedBy", fields: [createdById], references: [id])
+  createdById  String
+
+  completedAt DateTime?
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  actor      Employee @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  actorId    String
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId])
 }
