@@ -8,6 +8,7 @@ import {
   isOwner,
   canManageAny,
   canAccessEmployee,
+  canReviewLeave,
   assertCanManageProject,
   assertOwner,
   logActivity,
@@ -281,6 +282,49 @@ export async function reassignTask(taskId: string, assignedToId: string | null, 
     metadata: { assignedToId, projectId: task.projectId },
   });
   revalidatePath("/projects");
+  revalidatePath("/");
+}
+
+// ---------- Leave ----------
+
+export async function submitLeaveRequest(input: { type: string; startDate: string; endDate: string; reason?: string }) {
+  const user = await requireUser();
+  const start = new Date(input.startDate);
+  const end = new Date(input.endDate);
+  if (end < start) throw new Error("End date cannot be before start date");
+
+  const leave = await prisma.leaveRequest.create({
+    data: {
+      employeeId: user.id,
+      type: input.type,
+      startDate: start,
+      endDate: end,
+      reason: input.reason,
+      status: "PENDING",
+    },
+  });
+  await logActivity({ actorId: user.id, action: "LEAVE_REQUESTED", entityType: "LeaveRequest", entityId: leave.id });
+  revalidatePath("/leave");
+  return leave;
+}
+
+export async function reviewLeaveRequest(leaveId: string, status: "APPROVED" | "REJECTED") {
+  const user = await requireUser();
+  if (!canReviewLeave(user)) throw new Error("Only owners and the project manager can review leave requests");
+
+  const leave = await prisma.leaveRequest.update({
+    where: { id: leaveId },
+    data: { status, reviewedById: user.id, reviewedAt: new Date() },
+  });
+  await logActivity({
+    actorId: user.id,
+    action: status === "APPROVED" ? "LEAVE_APPROVED" : "LEAVE_REJECTED",
+    entityType: "LeaveRequest",
+    entityId: leaveId,
+    metadata: { employeeId: leave.employeeId },
+  });
+  revalidatePath("/leave");
+  revalidatePath("/attendance");
   revalidatePath("/");
 }
 

@@ -1,14 +1,16 @@
 export const dynamic = "force-dynamic";
 
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Card, Avatar } from "@/lib/ui";
-import { requireUser, isOwner, isManager, visibleEmployeeIds } from "@/lib/authorize";
+import { requireUser, isOwner, hasCompanyWideView, visibleEmployeeIds } from "@/lib/authorize";
 import { EmployeeControls } from "./employee-controls";
 import { AddEmployeeForm } from "./add-employee-form";
 
 export default async function EmployeesPage() {
   const user = await requireUser();
   const ids = await visibleEmployeeIds(user);
+  const companyWide = hasCompanyWideView(user);
 
   const employees = await prisma.employee.findMany({
     where: ids === "ALL" ? {} : { id: { in: ids } },
@@ -18,12 +20,8 @@ export default async function EmployeesPage() {
     orderBy: [{ active: "desc" }, { name: "asc" }],
   });
 
-  const heading = isOwner(user) ? "Employees" : isManager(user) ? "My Team" : "My Profile";
-  const subtitle = isOwner(user)
-    ? `${employees.length} team members`
-    : isManager(user)
-      ? `${employees.length} people across your projects`
-      : "Your account details";
+  const heading = companyWide ? "Employees" : "My Profile";
+  const subtitle = companyWide ? `${employees.length} team members` : "Your account details";
 
   return (
     <div className="space-y-6">
@@ -44,7 +42,9 @@ export default async function EmployeesPage() {
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <div className="font-medium flex items-center gap-2">
-                      {e.name}
+                      <Link href={`/employees/${e.id}`} className="hover:underline">
+                        {e.name}
+                      </Link>
                       {!e.active && <span className="text-[10px] uppercase text-[var(--muted)] border border-[var(--border)] rounded px-1.5 py-0.5">Inactive</span>}
                     </div>
                     <div className="text-xs text-[var(--muted)]">{e.title} · {e.department}</div>
@@ -53,7 +53,7 @@ export default async function EmployeesPage() {
                 <div className="text-xs text-[var(--muted)] mt-1">{e.email}</div>
                 <div className="text-xs text-[var(--muted)] mt-1">{e.role}</div>
 
-                {(isOwner(user) || isManager(user) || e.id === user.id) && (
+                {(companyWide || e.id === user.id) && (
                   <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                     <div className="rounded-md bg-white/5 px-2 py-1.5">
                       <div className="text-[var(--muted)]">GitHub</div>
@@ -83,11 +83,12 @@ export default async function EmployeesPage() {
                   </div>
                 )}
 
-                {isOwner(user) && (
-                  <div className="mt-4">
-                    <EmployeeControls employeeId={e.id} role={e.role} active={e.active} />
-                  </div>
-                )}
+                <div className="mt-4 flex items-center justify-between">
+                  <Link href={`/employees/${e.id}`} className="text-xs text-[var(--accent)] hover:underline">
+                    View progress →
+                  </Link>
+                  {isOwner(user) && <EmployeeControls employeeId={e.id} role={e.role} active={e.active} />}
+                </div>
               </div>
             </div>
           </Card>

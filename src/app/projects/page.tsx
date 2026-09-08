@@ -6,7 +6,8 @@ import { ProjectStatusControl } from "./project-status-control";
 import { TaskList } from "./task-list";
 import { MemberList } from "./member-list";
 import { CreateProjectForm } from "./create-project-form";
-import { requireUser, isOwner, isManager, canManageProject, visibleProjectIds } from "@/lib/authorize";
+import { AssignTaskForm } from "@/app/tasks/assign-task-form";
+import { requireUser, isOwner, isManager, hasCompanyWideView, canManageProject, visibleProjectIds } from "@/lib/authorize";
 
 export default async function ProjectsPage() {
   const user = await requireUser();
@@ -30,7 +31,8 @@ export default async function ProjectsPage() {
     ? await prisma.employee.findMany({ where: { active: true, role: { in: ["OWNER", "MANAGER"] } }, select: { id: true, name: true }, orderBy: { name: "asc" } })
     : [];
 
-  const heading = isOwner(user) ? "Projects" : isManager(user) ? "My Projects" : "My Projects";
+  const companyWide = hasCompanyWideView(user);
+  const heading = companyWide ? "Projects" : "My Projects";
 
   return (
     <div className="space-y-6">
@@ -39,14 +41,19 @@ export default async function ProjectsPage() {
           <h1 className="text-2xl font-semibold tracking-tight">{heading}</h1>
           <p className="text-sm text-[var(--muted)] mt-1">{projects.length} projects</p>
         </div>
-        {(isOwner(user) || isManager(user)) && <CreateProjectForm managers={managers} />}
+        {companyWide && (
+          <div className="flex items-center gap-2">
+            <AssignTaskForm projects={projects.map((p) => ({ id: p.id, name: p.name }))} employees={allEmployees} />
+            <CreateProjectForm managers={managers} />
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">
         {projects.map((p) => {
           const done = p.tasks.filter((t) => t.status === "COMPLETED").length;
           const progress = p.progressOverride ?? (p.tasks.length > 0 ? Math.round((done / p.tasks.length) * 100) : 0);
-          const canManage = canManageProject(user, p);
+          const canManage = canManageProject(user);
 
           return (
             <Card key={p.id} className="p-5">

@@ -27,28 +27,25 @@ export function isManager(user: SessionUser) {
 export function isDeveloper(user: SessionUser) {
   return user.role === "DEVELOPER";
 }
-/** OWNER and MANAGER both have management privileges (scoped for MANAGER). */
-export function canManageAny(user: SessionUser) {
-  return isOwner(user) || isManager(user);
-}
 
 /**
- * Project ids a user is allowed to see.
- * OWNER: every project. MANAGER: projects they manage or are an active member
- * of. DEVELOPER: projects they are an active member of.
+ * OWNER and MANAGER both have company-wide *operational* visibility and
+ * management privileges (create/assign projects & tasks, review leave, edit
+ * anyone's attendance). ClickfieldAI has exactly one Project Manager who is
+ * responsible for the entire workforce, so — unlike a multi-PM org — there is
+ * no per-project scoping between managers: MANAGER sees everything OWNER
+ * sees data-wise. What OWNER retains exclusively is *administrative* access:
+ * employee CRUD, role changes, deactivation. See `assertOwner`.
  */
-export async function visibleProjectIds(user: SessionUser): Promise<string[] | "ALL"> {
-  if (isOwner(user)) return "ALL";
+export function hasCompanyWideView(user: SessionUser) {
+  return isOwner(user) || isManager(user);
+}
+/** Alias kept for readability at call sites that are about managing work, not just viewing it. */
+export const canManageAny = hasCompanyWideView;
 
-  if (isManager(user)) {
-    const projects = await prisma.project.findMany({
-      where: {
-        OR: [{ managerId: user.id }, { assignments: { some: { employeeId: user.id, active: true } } }],
-      },
-      select: { id: true },
-    });
-    return projects.map((p) => p.id);
-  }
+/** Project ids a user is allowed to see. OWNER/MANAGER: every project. DEVELOPER: projects they're an active member of. */
+export async function visibleProjectIds(user: SessionUser): Promise<string[] | "ALL"> {
+  if (hasCompanyWideView(user)) return "ALL";
 
   const assignments = await prisma.projectAssignment.findMany({
     where: { employeeId: user.id, active: true },
@@ -62,26 +59,9 @@ export async function canAccessProject(user: SessionUser, projectId: string): Pr
   return ids === "ALL" || ids.includes(projectId);
 }
 
-/**
- * Employee ids a user is allowed to see full profiles / attendance for.
- * OWNER: everyone. MANAGER: themselves + every active member of a project
- * they manage or belong to. DEVELOPER: only themselves.
- */
+/** Employee ids a user is allowed to see full profiles / attendance / leave for. OWNER/MANAGER: everyone. DEVELOPER: only themselves. */
 export async function visibleEmployeeIds(user: SessionUser): Promise<string[] | "ALL"> {
-  if (isOwner(user)) return "ALL";
-
-  if (isManager(user)) {
-    const projectIds = await visibleProjectIds(user);
-    if (projectIds === "ALL") return "ALL";
-    if (projectIds.length === 0) return [user.id];
-
-    const members = await prisma.projectAssignment.findMany({
-      where: { projectId: { in: projectIds }, active: true },
-      select: { employeeId: true },
-    });
-    return Array.from(new Set([user.id, ...members.map((m) => m.employeeId)]));
-  }
-
+  if (hasCompanyWideView(user)) return "ALL";
   return [user.id];
 }
 
@@ -94,7 +74,7 @@ export async function canAccessEmployee(user: SessionUser, employeeId: string): 
 /**
  * A task is visible if its project is visible to the user, or it's assigned
  * to them directly (covers a developer who lost project membership but still
- * has an open task, matching the spec's OR clause).
+ * has an open task).
  */
 export async function canAccessTask(
   user: SessionUser,
@@ -104,18 +84,14 @@ export async function canAccessTask(
   return canAccessProject(user, task.projectId);
 }
 
-/** Only OWNER, or the MANAGER who manages this specific project. */
-export function canManageProject(
-  user: SessionUser,
-  project: { managerId: string | null }
-): boolean {
-  if (isOwner(user)) return true;
-  return isManager(user) && project.managerId === user.id;
+/** OWNER and MANAGER can both manage any project (single company-wide PM). */
+export function canManageProject(user: SessionUser): boolean {
+  return hasCompanyWideView(user);
 }
 
 export async function assertCanManageProject(user: SessionUser, projectId: string) {
   const project = await prisma.project.findUniqueOrThrow({ where: { id: projectId } });
-  if (!canManageProject(user, project)) throw new ForbiddenError("Not permitted to manage this project");
+  if (!canManageProject(user)) throw new ForbiddenError("Not permitted to manage this project");
   return project;
 }
 
@@ -123,8 +99,14 @@ export async function assertCanAccessEmployee(user: SessionUser, employeeId: str
   if (!(await canAccessEmployee(user, employeeId))) throw new ForbiddenError("Not permitted to access this employee");
 }
 
+/** Owner-only administrative actions: employee CRUD, role changes, Owner account changes, system settings. */
 export async function assertOwner(user: SessionUser) {
   if (!isOwner(user)) throw new ForbiddenError("Owner access required");
+}
+
+/** Leave requests: reviewer must be OWNER or MANAGER; a user can always see/manage their own request. */
+export function canReviewLeave(user: SessionUser) {
+  return hasCompanyWideView(user);
 }
 
 export async function logActivity(params: {

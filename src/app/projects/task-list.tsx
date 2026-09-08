@@ -62,7 +62,7 @@ export function TaskList({
         </h3>
         {canManage && (
           <button onClick={() => setShowForm((s) => !s)} className="text-xs text-[var(--accent)] hover:underline">
-            {showForm ? "Cancel" : "+ Add task"}
+            {showForm ? "Cancel" : "+ Assign task"}
           </button>
         )}
       </div>

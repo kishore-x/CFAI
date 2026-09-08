@@ -56,6 +56,12 @@ enum TaskStatus {
   COMPLETED
 }
 
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Employee {
   id            String   @id @default(cuid())
   name          String
@@ -78,6 +84,7 @@ model Employee {
   attendance      Attendance[]
   assignments     ProjectAssignment[]
   leaves          LeaveRequest[]
+  reviewedLeaves  LeaveRequest[] @relation("LeaveReviewedBy")
   managedProjects Project[]      @relation("ProjectManager")
   createdTasks    Task[]         @relation("TaskCreatedBy")
   assignedTasks   Task[]         @relation("TaskAssignedTo")
@@ -105,13 +112,18 @@ model Attendance {
 }
 
 model LeaveRequest {
-  id          String   @id @default(cuid())
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  id          String      @id @default(cuid())
+  employee    Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   employeeId  String
+  type        String      @default("Personal")
   startDate   DateTime
   endDate     DateTime
   reason      String?
-  approved    Boolean  @default(true)
+  status      LeaveStatus @default(PENDING)
+
+  reviewedBy   Employee? @relation("LeaveReviewedBy", fields: [reviewedById], references: [id])
+  reviewedById String?
+  reviewedAt   DateTime?
 
   createdAt   DateTime @default(now())
 }

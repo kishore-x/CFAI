@@ -154,14 +154,37 @@ async function main() {
     await prisma.attendance.create({ data: row });
   }
 
-  await prisma.leaveRequest.create({
-    data: {
-      employeeId: priya.id,
-      startDate: today,
-      endDate: today,
-      reason: "Personal",
-      approved: true,
-    },
+  await prisma.leaveRequest.createMany({
+    data: [
+      {
+        employeeId: priya.id,
+        type: "Personal",
+        startDate: today,
+        endDate: today,
+        reason: "Personal",
+        status: "APPROVED",
+        reviewedById: sneha.id,
+        reviewedAt: today,
+      },
+      {
+        employeeId: vikram.id,
+        type: "Vacation",
+        startDate: new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 3)),
+        endDate: new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 5)),
+        reason: "Family trip",
+        status: "PENDING",
+      },
+      {
+        employeeId: rahul.id,
+        type: "Sick",
+        startDate: new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - 10)),
+        endDate: new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - 10)),
+        reason: "Flu",
+        status: "APPROVED",
+        reviewedById: kishore.id,
+        reviewedAt: today,
+      },
+    ],
   });
 
   console.log("\nSeed complete:", { employees: employees.length, projects: 4 });

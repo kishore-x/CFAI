@@ -3,7 +3,8 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Card, StatCard, ProjectStatusBadge, AttendanceBadge, TaskStatusBadge, Avatar, fmtTime } from "@/lib/ui";
-import { requireUser, isOwner, isManager, visibleProjectIds, visibleEmployeeIds } from "@/lib/authorize";
+import { requireUser, isOwner, hasCompanyWideView } from "@/lib/authorize";
+import { AssignTaskForm } from "@/app/tasks/assign-task-form";
 
 function startOfDay(d: Date) {
   const c = new Date(d);
@@ -16,7 +17,10 @@ function taskCounts(tasks: { status: string; dueDate: Date | null }[]) {
   return {
     total: tasks.length,
     completed: tasks.filter((t) => t.status === "COMPLETED").length,
+    inProgress: tasks.filter((t) => t.status === "IN_PROGRESS").length,
+    inReview: tasks.filter((t) => t.status === "IN_REVIEW").length,
     blocked: tasks.filter((t) => t.status === "BLOCKED").length,
+    todo: tasks.filter((t) => t.status === "TODO").length,
     overdue: tasks.filter((t) => t.dueDate && new Date(t.dueDate) < now && t.status !== "COMPLETED").length,
   };
 }
@@ -31,54 +35,72 @@ export default async function OverviewPage() {
   const user = await requireUser();
   const today = startOfDay(new Date());
 
-  if (isOwner(user)) return <OwnerDashboard today={today} />;
-  if (isManager(user)) return <ManagerDashboard user={user} today={today} />;
+  if (hasCompanyWideView(user)) return <CompanyDashboard user={user} today={today} />;
   return <DeveloperDashboard user={user} today={today} />;
 }
 
-// ---------------- OWNER ----------------
+// ---------------- OWNER + MANAGER (company-wide operational view) ----------------
 
-async function OwnerDashboard({ today }: { today: Date }) {
-  const [employees, todaysAttendance, projects, activity] = await Promise.all([
+async function CompanyDashboard({ user, today }: { user: { id: string; role: string }; today: Date }) {
+  const owner = isOwner(user);
+
+  const [employees, todaysAttendance, projects, allTasks, pendingLeave, activity] = await Promise.all([
     prisma.employee.findMany({ where: { active: true } }),
     prisma.attendance.findMany({ where: { date: today }, include: { employee: true } }),
-    prisma.project.findMany({ include: { tasks: true, assignments: true }, orderBy: { updatedAt: "desc" } }),
-    prisma.activityLog.findMany({ include: { actor: true }, orderBy: { createdAt: "desc" }, take: 10 }),
+    prisma.project.findMany({ include: { tasks: true, assignments: { where: { active: true }, include: { employee: true } } }, orderBy: { updatedAt: "desc" } }),
+    prisma.task.findMany({ include: { assignedTo: true } }),
+    prisma.leaveRequest.count({ where: { status: "PENDING" } }),
+    owner ? prisma.activityLog.findMany({ include: { actor: true }, orderBy: { createdAt: "desc" }, take: 10 }) : Promise.resolve([]),
   ]);
 
   const present = todaysAttendance.filter((a) => a.status === "PRESENT");
   const wfh = present.filter((a) => a.workMode === "WFH").length;
   const office = present.filter((a) => a.workMode === "OFFICE").length;
-  const absent = employees.length - present.length;
+  const onLeave = todaysAttendance.filter((a) => a.status === "LEAVE").length;
+  const absent = Math.max(employees.length - present.length - onLeave, 0);
 
-  const allTasks = projects.flatMap((p) => p.tasks);
   const tCounts = taskCounts(allTasks);
   const activeProjects = projects.filter((p) => p.status === "ACTIVE" || p.status === "PLANNING").length;
   const completedProjects = projects.filter((p) => p.status === "COMPLETED").length;
   const onHoldProjects = projects.filter((p) => p.status === "ON_HOLD").length;
 
+  const developers = employees.filter((e) => e.role === "DEVELOPER");
+  const projectOptions = projects.map((p) => ({ id: p.id, name: p.name }));
+  const employeeOptions = employees.map((e) => ({ id: e.id, name: e.name }));
+
   return (
     <div className="space-y-8">
-      <PageHeader title="Dashboard" />
+      <div className="flex items-start justify-between gap-3">
+        <PageHeader title="Dashboard" />
+        <AssignTaskForm projects={projectOptions} employees={employeeOptions} />
+      </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Total employees" value={employees.length} />
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <StatCard label={owner ? "Total employees" : "Total developers"} value={owner ? employees.length : developers.length} />
         <StatCard label="Present today" value={present.length} hint={`${office} office · ${wfh} WFH`} />
+        <StatCard label="On leave" value={onLeave} />
         <StatCard label="Absent today" value={absent} />
-        <StatCard label="Active projects" value={activeProjects} hint={`${projects.length} total`} />
+        <StatCard label="Pending leave requests" value={pendingLeave} />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Projects on hold" value={onHoldProjects} />
-        <StatCard label="Projects completed" value={completedProjects} />
-        <StatCard label="Tasks overdue" value={tCounts.overdue} />
-        <StatCard label="Tasks blocked" value={tCounts.blocked} />
-      </div>
+      {owner && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard label="Active projects" value={activeProjects} hint={`${projects.length} total`} />
+          <StatCard label="Projects on hold" value={onHoldProjects} />
+          <StatCard label="Projects completed" value={completedProjects} />
+          <StatCard label="Tasks overdue" value={tCounts.overdue} />
+        </div>
+      )}
+
+      <Card className="p-5">
+        <h2 className="font-semibold mb-4">Developer progress</h2>
+        <DeveloperProgressTable developers={developers.length > 0 ? developers : employees} tasks={allTasks} />
+      </Card>
 
       <div className="grid md:grid-cols-2 gap-6">
         <Card className="p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold">Today&apos;s workforce</h2>
+            <h2 className="font-semibold">Today&apos;s attendance</h2>
             <Link href="/attendance" className="text-sm text-[var(--accent)] font-medium hover:underline">
               View all
             </Link>
@@ -91,12 +113,14 @@ async function OwnerDashboard({ today }: { today: Date }) {
                   <div className="flex items-center gap-3 min-w-0">
                     <Avatar name={e.name} />
                     <div className="min-w-0">
-                      <div className="text-sm font-medium truncate">{e.name}</div>
+                      <Link href={`/employees/${e.id}`} className="text-sm font-medium truncate hover:underline block">
+                        {e.name}
+                      </Link>
                       <div className="text-xs text-[var(--muted)] truncate">{e.title}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    {a?.status === "PRESENT" && <span className="text-xs text-[var(--muted)]">{a.workMode === "WFH" ? "WFH" : "Office"}</span>}
+                    {a?.status === "PRESENT" && <span className="text-xs text-[var(--muted)]">{a.workMode === "WFH" ? "WFH" : "Office"} · {fmtTime(a.clockIn)}</span>}
                     <AttendanceBadge status={a?.status ?? "LEAVE"} />
                   </div>
                 </li>
@@ -121,102 +145,23 @@ async function OwnerDashboard({ today }: { today: Date }) {
       </div>
 
       <Card className="p-5">
-        <h2 className="font-semibold mb-4">Recent activity</h2>
-        <ActivityFeed activity={activity} />
-      </Card>
-    </div>
-  );
-}
-
-// ---------------- MANAGER ----------------
-
-async function ManagerDashboard({ user, today }: { user: { id: string; role: string }; today: Date }) {
-  const projectIds = await visibleProjectIds(user);
-  const teamIds = await visibleEmployeeIds(user);
-  const scopedProjectWhere = projectIds === "ALL" ? {} : { id: { in: projectIds } };
-  const scopedTeamWhere = teamIds === "ALL" ? {} : { id: { in: teamIds } };
-
-  const [team, todaysAttendance, projects] = await Promise.all([
-    prisma.employee.findMany({ where: { ...scopedTeamWhere, active: true } }),
-    prisma.attendance.findMany({ where: { date: today, employee: scopedTeamWhere }, include: { employee: true } }),
-    prisma.project.findMany({
-      where: scopedProjectWhere,
-      include: { tasks: true, assignments: { where: { active: true }, include: { employee: true } } },
-      orderBy: { updatedAt: "desc" },
-    }),
-  ]);
-
-  const present = todaysAttendance.filter((a) => a.status === "PRESENT");
-  const wfh = present.filter((a) => a.workMode === "WFH").length;
-  const office = present.filter((a) => a.workMode === "OFFICE").length;
-
-  const allTasks = projects.flatMap((p) => p.tasks);
-  const tCounts = taskCounts(allTasks);
-  const dueToday = allTasks.filter((t) => t.dueDate && startOfDay(new Date(t.dueDate)).getTime() === today.getTime() && t.status !== "COMPLETED").length;
-
-  return (
-    <div className="space-y-8">
-      <PageHeader title="Dashboard" />
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Total team" value={team.length} />
-        <StatCard label="Present" value={present.length} />
-        <StatCard label="WFH" value={wfh} />
-        <StatCard label="Office" value={office} />
-      </div>
-
-      <Card className="p-5">
-        <h2 className="font-semibold mb-4">My projects</h2>
-        <div className="space-y-4">
-          {projects.map((p) => (
-            <ProjectProgressRow key={p.id} p={p} showTaskCount />
-          ))}
-          {projects.length === 0 && <div className="text-sm text-[var(--muted)]">No projects assigned yet.</div>}
+        <h2 className="font-semibold mb-3">Team task status</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
+          <TaskStatTile label="Completed" value={tCounts.completed} />
+          <TaskStatTile label="In progress" value={tCounts.inProgress} />
+          <TaskStatTile label="In review" value={tCounts.inReview} />
+          <TaskStatTile label="Blocked" value={tCounts.blocked} />
+          <TaskStatTile label="Todo" value={tCounts.todo} />
         </div>
+        <div className="mt-2 text-xs text-[var(--muted)]">Total tasks: {tCounts.total}</div>
       </Card>
 
-      <Card className="p-5 overflow-x-auto">
-        <h2 className="font-semibold mb-4">Team status</h2>
-        <table className="w-full text-left">
-          <thead>
-            <tr className="text-xs uppercase tracking-wide text-[var(--muted)]">
-              <th className="pb-2 font-medium">Employee</th>
-              <th className="pb-2 font-medium">Project</th>
-              <th className="pb-2 font-medium">Today</th>
-            </tr>
-          </thead>
-          <tbody>
-            {team.map((e) => {
-              const a = todaysAttendance.find((x) => x.employeeId === e.id);
-              const proj = projects.find((p) => p.assignments.some((asn) => asn.employeeId === e.id));
-              return (
-                <tr key={e.id} className="border-t border-[var(--border)]">
-                  <td className="py-2.5 pr-4 flex items-center gap-2">
-                    <Avatar name={e.name} />
-                    <span className="text-sm">{e.name}</span>
-                  </td>
-                  <td className="py-2.5 pr-4 text-sm text-[var(--muted)]">{proj?.name ?? "—"}</td>
-                  <td className="py-2.5 pr-4">
-                    <div className="flex items-center gap-2">
-                      <AttendanceBadge status={a?.status ?? "LEAVE"} />
-                      {a?.status === "PRESENT" && <span className="text-xs text-[var(--muted)]">{a.workMode}</span>}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </Card>
-
-      <Card className="p-5">
-        <h2 className="font-semibold mb-3">Tasks requiring attention</h2>
-        <div className="flex flex-wrap gap-4 text-sm">
-          <span className="text-red-400">{tCounts.overdue} overdue</span>
-          <span className="text-[var(--foreground)]">{tCounts.blocked} blocked</span>
-          <span className="text-[var(--muted)]">{dueToday} due today</span>
-        </div>
-      </Card>
+      {owner && (
+        <Card className="p-5">
+          <h2 className="font-semibold mb-4">Recent activity</h2>
+          <ActivityFeed activity={activity} />
+        </Card>
+      )}
     </div>
   );
 }
@@ -322,6 +267,77 @@ function PageHeader({ title }: { title: string }) {
   );
 }
 
+function TaskStatTile({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-md bg-white/5 px-3 py-2">
+      <div className="text-[var(--muted)] text-xs">{label}</div>
+      <div className="text-lg font-semibold">{value}</div>
+    </div>
+  );
+}
+
+function DeveloperProgressTable({
+  developers,
+  tasks,
+}: {
+  developers: { id: string; name: string }[];
+  tasks: { assignedToId: string | null; status: string }[];
+}) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left">
+        <thead>
+          <tr className="text-xs uppercase tracking-wide text-[var(--muted)]">
+            <th className="pb-2 font-medium">Developer</th>
+            <th className="pb-2 font-medium text-right">Assigned</th>
+            <th className="pb-2 font-medium text-right">Completed</th>
+            <th className="pb-2 font-medium text-right">In progress</th>
+            <th className="pb-2 font-medium text-right">Blocked</th>
+            <th className="pb-2 font-medium">Progress</th>
+          </tr>
+        </thead>
+        <tbody>
+          {developers.map((d) => {
+            const mine = tasks.filter((t) => t.assignedToId === d.id);
+            const completed = mine.filter((t) => t.status === "COMPLETED").length;
+            const inProgress = mine.filter((t) => t.status === "IN_PROGRESS").length;
+            const blocked = mine.filter((t) => t.status === "BLOCKED").length;
+            const progress = mine.length > 0 ? Math.round((completed / mine.length) * 100) : 0;
+            return (
+              <tr key={d.id} className="border-t border-[var(--border)]">
+                <td className="py-2.5 pr-4 text-sm">
+                  <Link href={`/employees/${d.id}`} className="hover:underline">
+                    {d.name}
+                  </Link>
+                </td>
+                <td className="py-2.5 pr-4 text-sm text-right">{mine.length}</td>
+                <td className="py-2.5 pr-4 text-sm text-right">{completed}</td>
+                <td className="py-2.5 pr-4 text-sm text-right">{inProgress}</td>
+                <td className="py-2.5 pr-4 text-sm text-right">{blocked}</td>
+                <td className="py-2.5 pr-4 w-40">
+                  <div className="flex items-center gap-2">
+                    <div className="h-1.5 flex-1 rounded-full bg-white/10 overflow-hidden">
+                      <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${progress}%` }} />
+                    </div>
+                    <span className="text-xs text-[var(--muted)] w-9 text-right">{progress}%</span>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+          {developers.length === 0 && (
+            <tr>
+              <td colSpan={6} className="py-4 text-center text-sm text-[var(--muted)]">
+                No developers yet.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function ProjectProgressRow({
   p,
   showTaskCount,
@@ -366,6 +382,9 @@ const ACTION_LABEL: Record<string, string> = {
   ATTENDANCE_CHECK_IN: "checked in",
   ATTENDANCE_CHECK_OUT: "checked out",
   ATTENDANCE_WORK_MODE: "updated work mode",
+  LEAVE_REQUESTED: "requested leave",
+  LEAVE_APPROVED: "approved leave for",
+  LEAVE_REJECTED: "rejected leave for",
 };
 
 function ActivityFeed({ activity }: { activity: { id: string; action: string; createdAt: Date; actor: { name: string } }[] }) {

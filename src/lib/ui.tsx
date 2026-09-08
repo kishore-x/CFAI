@@ -74,6 +74,20 @@ export function AttendanceBadge({ status }: { status: string }) {
   );
 }
 
+const LEAVE_STATUS_STYLES: Record<string, string> = {
+  PENDING: "border border-dashed border-[var(--border)] text-[var(--muted)]",
+  APPROVED: "bg-white text-black",
+  REJECTED: "border border-[var(--foreground)] text-[var(--foreground)] line-through",
+};
+
+export function LeaveStatusBadge({ status }: { status: string }) {
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${LEAVE_STATUS_STYLES[status] ?? "border border-[var(--border)]"}`}>
+      {status}
+    </span>
+  );
+}
+
 const AVATAR_SHADES = ["#e5e5e5", "#c4c4c4", "#a3a3a3", "#868686", "#6b6b6b"];
 
 function shadeFor(name: string) {
