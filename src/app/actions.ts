@@ -14,6 +14,7 @@ import {
   logActivity,
 } from "@/lib/authorize";
 import { notify, notifyMany, companyWideRecipientIds } from "@/lib/notify";
+import { validateGenericUrl, validateGithubRepoUrl, looksLikeSecret } from "@/lib/validation";
 
 function startOfDay(d: Date) {
   const c = new Date(d);
@@ -107,19 +108,109 @@ export async function setLeave(employeeId: string, onLeave: boolean) {
 
 // ---------- Projects ----------
 
-export async function createProject(input: {
-  name: string;
-  client?: string;
-  description?: string;
-  deadline?: string;
-  managerId?: string;
-}) {
+const DEV_RESOURCE_STATUSES = ["ACTIVE", "PAUSED", "COMPLETED"];
+
+type DevResourcesInput = {
+  githubRepoUrl?: string;
+  vercelProjectUrl?: string;
+  claudeAccountName?: string;
+  productionUrl?: string;
+  stagingUrl?: string;
+  developmentBranch?: string;
+  techStack?: string;
+  devResourceStatus?: string;
+};
+
+// Shared by createProject and updateProjectDevResources: validates each
+// provided field and returns a Prisma-ready data object. Blank strings map
+// to null (clears the field) rather than being rejected — every field here
+// is optional. Throws on anything actually invalid.
+function buildDevResourceData(input: DevResourcesInput) {
+  const data: Record<string, string | null> = {};
+
+  if (input.githubRepoUrl !== undefined) {
+    const trimmed = input.githubRepoUrl.trim();
+    if (!trimmed) data.githubRepoUrl = null;
+    else {
+      const result = validateGithubRepoUrl(trimmed);
+      if (!result.ok) throw new Error(result.error);
+      data.githubRepoUrl = result.value;
+    }
+  }
+
+  if (input.vercelProjectUrl !== undefined) {
+    const trimmed = input.vercelProjectUrl.trim();
+    if (!trimmed) data.vercelProjectUrl = null;
+    else {
+      const result = validateGenericUrl(trimmed);
+      if (!result.ok) throw new Error(`Vercel URL: ${result.error}`);
+      data.vercelProjectUrl = result.value;
+    }
+  }
+
+  if (input.productionUrl !== undefined) {
+    const trimmed = input.productionUrl.trim();
+    if (!trimmed) data.productionUrl = null;
+    else {
+      const result = validateGenericUrl(trimmed);
+      if (!result.ok) throw new Error(`Production URL: ${result.error}`);
+      data.productionUrl = result.value;
+    }
+  }
+
+  if (input.stagingUrl !== undefined) {
+    const trimmed = input.stagingUrl.trim();
+    if (!trimmed) data.stagingUrl = null;
+    else {
+      const result = validateGenericUrl(trimmed);
+      if (!result.ok) throw new Error(`Staging URL: ${result.error}`);
+      data.stagingUrl = result.value;
+    }
+  }
+
+  if (input.claudeAccountName !== undefined) {
+    const trimmed = input.claudeAccountName.trim();
+    if (trimmed && looksLikeSecret(trimmed)) {
+      throw new Error("That looks like a credential or token, not an account name — only store an account/workspace name, never a secret.");
+    }
+    data.claudeAccountName = trimmed || null;
+  }
+
+  if (input.developmentBranch !== undefined) {
+    const trimmed = input.developmentBranch.trim();
+    if (trimmed && looksLikeSecret(trimmed)) throw new Error("That doesn't look like a branch name.");
+    data.developmentBranch = trimmed || null;
+  }
+
+  if (input.techStack !== undefined) {
+    data.techStack = input.techStack.trim() || null;
+  }
+
+  if (input.devResourceStatus !== undefined) {
+    const trimmed = input.devResourceStatus.trim();
+    if (trimmed && !DEV_RESOURCE_STATUSES.includes(trimmed)) throw new Error("Invalid development status");
+    data.devResourceStatus = trimmed || null;
+  }
+
+  return data;
+}
+
+export async function createProject(
+  input: {
+    name: string;
+    client?: string;
+    description?: string;
+    deadline?: string;
+    managerId?: string;
+  } & DevResourcesInput
+) {
   const user = await requireUser();
   if (!canManageAny(user)) throw new Error("Only owners and project managers can create projects");
 
   // A MANAGER creating a project automatically becomes its manager unless
   // an OWNER explicitly assigns someone else.
   const managerId = isOwner(user) ? input.managerId ?? null : user.id;
+  const devData = buildDevResourceData(input);
 
   const project = await prisma.project.create({
     data: {
@@ -128,12 +219,24 @@ export async function createProject(input: {
       description: input.description,
       deadline: input.deadline ? new Date(input.deadline) : null,
       managerId,
+      ...devData,
     },
   });
   await logActivity({ actorId: user.id, action: "PROJECT_CREATED", entityType: "Project", entityId: project.id });
   revalidatePath("/projects");
   revalidatePath("/");
   return project;
+}
+
+export async function updateProjectDevResources(projectId: string, input: DevResourcesInput) {
+  const user = await requireUser();
+  await assertCanManageProject(user, projectId);
+
+  const devData = buildDevResourceData(input);
+  await prisma.project.update({ where: { id: projectId }, data: devData });
+  await logActivity({ actorId: user.id, action: "PROJECT_DEV_RESOURCES_UPDATED", entityType: "Project", entityId: projectId });
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/projects");
 }
 
 export async function updateProjectStatus(projectId: string, status: string) {

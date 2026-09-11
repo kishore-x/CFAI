@@ -32,6 +32,20 @@ export function ProjectStatusBadge({ status }: { status: string }) {
   );
 }
 
+const DEV_RESOURCE_STATUS_STYLES: Record<string, string> = {
+  ACTIVE: "bg-gray-700 text-white",
+  PAUSED: "border border-dashed border-[var(--border)] text-[var(--muted)]",
+  COMPLETED: "bg-white text-black",
+};
+
+export function DevResourceStatusBadge({ status }: { status: string }) {
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${DEV_RESOURCE_STATUS_STYLES[status] ?? "border border-[var(--border)]"}`}>
+      {status}
+    </span>
+  );
+}
+
 const TASK_STATUS_STYLES: Record<string, string> = {
   TODO: "border border-[var(--border)] text-[var(--muted)]",
   IN_PROGRESS: "bg-gray-700 text-white",

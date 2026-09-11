@@ -73,6 +73,15 @@ enum LeavePeriod {
   ANNUAL
 }
 
+// Status of the project's development environment/resources — independent
+// of the overall ProjectStatus (a project can be ON_HOLD while its repo is
+// still ACTIVE, or ACTIVE while dev work is PAUSED for the sprint, etc).
+enum DevResourceStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
 model Employee {
   id            String   @id @default(cuid())
   name          String
@@ -156,8 +165,21 @@ model Project {
   progressOverride Int?
   startDate   DateTime?
   deadline    DateTime?
-  githubRepoUrl String?
-  vercelProjectUrl String?
+
+  // Development resources — project-level references/identifiers only,
+  // never credentials. A project can have exactly one primary repo for now;
+  // githubRepoUrl is kept as a plain field rather than a child model since
+  // multi-repo support isn't needed yet, but every field here is scoped to
+  // the project (never the employee) so it stays easy to split into a
+  // ProjectDevelopmentResource model later without touching callers.
+  githubRepoUrl      String?
+  vercelProjectUrl   String?
+  claudeAccountName  String?
+  productionUrl      String?
+  stagingUrl         String?
+  developmentBranch  String?
+  techStack          String?
+  devResourceStatus  DevResourceStatus?
 
   manager     Employee? @relation("ProjectManager", fields: [managerId], references: [id])
   managerId   String?

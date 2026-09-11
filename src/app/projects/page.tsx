@@ -79,6 +79,14 @@ export default async function ProjectsPage() {
                   {overdue > 0 && <span className="text-red-400">{overdue} overdue</span>}
                   {p.deadline && <span>Due {new Date(p.deadline).toLocaleDateString("en-GB")}</span>}
                 </div>
+
+                {(p.githubRepoUrl || p.vercelProjectUrl || p.claudeAccountName) && (
+                  <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-[var(--muted)]">
+                    {p.githubRepoUrl && <span>GitHub ↗</span>}
+                    {p.vercelProjectUrl && <span>Vercel ↗</span>}
+                    {p.claudeAccountName && <span>Claude</span>}
+                  </div>
+                )}
               </Card>
             </Link>
           );

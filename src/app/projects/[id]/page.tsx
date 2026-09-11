@@ -8,6 +8,7 @@ import { ProjectStatusControl } from "../project-status-control";
 import { MemberList } from "../member-list";
 import { TaskList } from "../task-list";
 import { MilestoneList } from "../milestone-list";
+import { DevResourcesCard } from "../dev-resources-card";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -105,16 +106,6 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             )}
           </div>
         )}
-        {project.githubRepoUrl && (
-          <a href={project.githubRepoUrl} target="_blank" className="text-[var(--accent)] hover:underline">
-            GitHub repo
-          </a>
-        )}
-        {project.vercelProjectUrl && (
-          <a href={project.vercelProjectUrl} target="_blank" className="text-[var(--accent)] hover:underline">
-            Vercel project
-          </a>
-        )}
       </div>
 
       <Card className="p-5">
@@ -126,15 +117,32 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         />
       </Card>
 
-      <Card className="p-5">
-        <h2 className="font-semibold mb-1">Team</h2>
-        <MemberList
+      <div className="grid md:grid-cols-2 gap-4">
+        <Card className="p-5">
+          <h2 className="font-semibold mb-1">Team</h2>
+          <MemberList
+            projectId={project.id}
+            members={project.assignments.map((a) => ({ id: a.employee.id, name: a.employee.name, role: a.role }))}
+            candidates={allEmployees}
+            canManage={canManage}
+          />
+        </Card>
+
+        <DevResourcesCard
           projectId={project.id}
-          members={project.assignments.map((a) => ({ id: a.employee.id, name: a.employee.name, role: a.role }))}
-          candidates={allEmployees}
           canManage={canManage}
+          resources={{
+            githubRepoUrl: project.githubRepoUrl,
+            vercelProjectUrl: project.vercelProjectUrl,
+            claudeAccountName: project.claudeAccountName,
+            productionUrl: project.productionUrl,
+            stagingUrl: project.stagingUrl,
+            developmentBranch: project.developmentBranch,
+            techStack: project.techStack,
+            devResourceStatus: project.devResourceStatus,
+          }}
         />
-      </Card>
+      </div>
 
       <Card className="p-5">
         <TaskList
