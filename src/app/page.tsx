@@ -100,7 +100,7 @@ async function CompanyDashboard({ user, today }: { user: { id: string; role: str
       <NeedsAttention tasks={allTasks} pendingLeaveRequests={pendingLeaveRequests} projects={projects} />
 
       <div className="grid md:grid-cols-2 gap-6">
-        <Card className="p-5">
+        <Card className="p-5 overflow-hidden">
           <h2 className="font-semibold mb-4">Developer progress</h2>
           <DeveloperProgressTable developers={developers.length > 0 ? developers : employees} tasks={allTasks} />
         </Card>
