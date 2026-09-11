@@ -7,6 +7,7 @@ import { requireUser, isOwner, hasCompanyWideView } from "@/lib/authorize";
 import { AssignTaskForm } from "@/app/tasks/assign-task-form";
 import { DailyUpdateForm } from "@/app/daily-updates/daily-update-form";
 import { getDeveloperWorkload } from "@/lib/services";
+import { HScrollContainer } from "@/app/h-scroll-container";
 
 function startOfDay(d: Date) {
   const c = new Date(d);
@@ -470,7 +471,7 @@ function DeveloperProgressTable({
   tasks: { assignedToId: string | null; status: string }[];
 }) {
   return (
-    <div className="overflow-x-auto scrollbar-hide">
+    <HScrollContainer className="overflow-x-auto scrollbar-hide">
       <table className="w-full text-left border-separate border-spacing-0">
         <thead>
           <tr className="text-xs uppercase tracking-wide text-[var(--muted)]">
@@ -520,7 +521,7 @@ function DeveloperProgressTable({
           )}
         </tbody>
       </table>
-    </div>
+    </HScrollContainer>
   );
 }
 
