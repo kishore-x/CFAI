@@ -470,7 +470,7 @@ function DeveloperProgressTable({
   tasks: { assignedToId: string | null; status: string }[];
 }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto scrollbar-hide">
       <table className="w-full text-left border-separate border-spacing-0">
         <thead>
           <tr className="text-xs uppercase tracking-wide text-[var(--muted)]">
