@@ -15,6 +15,7 @@ import {
 } from "@/lib/authorize";
 import { notify, notifyMany, companyWideRecipientIds } from "@/lib/notify";
 import { validateGenericUrl, validateGithubRepoUrl, looksLikeSecret } from "@/lib/validation";
+import { sendTaskAssignedEmail, sendTaskCompletedEmail, sendTaskBlockedEmail, sendLeaveRequestedEmail, sendLeaveDecisionEmail } from "@/lib/email";
 
 function startOfDay(d: Date) {
   const c = new Date(d);
@@ -341,6 +342,17 @@ export async function createTask(input: {
   });
   if (input.assignedToId && input.assignedToId !== user.id) {
     await notify(input.assignedToId, "TASK_ASSIGNED", `New task assigned: ${input.title}`, { type: "Task", id: task.id });
+    const project = await prisma.project.findUnique({ where: { id: input.projectId }, select: { name: true } });
+    await sendTaskAssignedEmail({
+      recipientId: input.assignedToId,
+      taskId: task.id,
+      taskTitle: task.title,
+      projectName: project?.name ?? "",
+      priority: task.priority,
+      dueDate: task.dueDate,
+      assignedByName: user.name ?? "Someone",
+      description: task.description,
+    });
   }
   revalidatePath("/projects");
   revalidatePath("/tasks");
@@ -377,6 +389,27 @@ export async function updateTaskStatus(taskId: string, status: string) {
       `${task.title} was marked ${status === "BLOCKED" ? "blocked" : "completed"} by ${user.name ?? "a developer"}`,
       { type: "Task", id: taskId }
     );
+    const project = await prisma.project.findUnique({ where: { id: task.projectId }, select: { name: true } });
+    await Promise.all(
+      recipients.map((id) =>
+        status === "BLOCKED"
+          ? sendTaskBlockedEmail({
+              recipientId: id,
+              taskId,
+              taskTitle: task.title,
+              projectName: project?.name ?? "",
+              developerName: user.name ?? "A developer",
+            })
+          : sendTaskCompletedEmail({
+              recipientId: id,
+              taskId,
+              taskTitle: task.title,
+              projectName: project?.name ?? "",
+              completedByName: user.name ?? "A developer",
+              completedAt: new Date(),
+            })
+      )
+    );
   }
   revalidatePath("/projects");
   revalidatePath("/tasks");
@@ -405,6 +438,18 @@ export async function reassignTask(taskId: string, assignedToId: string | null, 
   });
   if (assignedToId && assignedToId !== task.assignedToId) {
     await notify(assignedToId, "TASK_REASSIGNED", `Task reassigned to you: ${task.title}`, { type: "Task", id: taskId });
+    const project = await prisma.project.findUnique({ where: { id: task.projectId }, select: { name: true } });
+    await sendTaskAssignedEmail({
+      recipientId: assignedToId,
+      taskId,
+      taskTitle: task.title,
+      projectName: project?.name ?? "",
+      priority: priority ?? task.priority,
+      dueDate: dueDate !== undefined ? (dueDate ? new Date(dueDate) : null) : task.dueDate,
+      assignedByName: user.name ?? "Someone",
+      description: task.description,
+      reassigned: true,
+    });
   }
   revalidatePath("/projects");
   revalidatePath("/tasks");
@@ -432,6 +477,19 @@ export async function submitLeaveRequest(input: { type: string; startDate: strin
   await logActivity({ actorId: user.id, action: "LEAVE_REQUESTED", entityType: "LeaveRequest", entityId: leave.id });
   const reviewers = await companyWideRecipientIds(user.id);
   await notifyMany(reviewers, "LEAVE_REQUESTED", `${user.name ?? "An employee"} requested ${input.type} leave`, { type: "LeaveRequest", id: leave.id });
+  await Promise.all(
+    reviewers.map((id) =>
+      sendLeaveRequestedEmail({
+        recipientId: id,
+        leaveId: leave.id,
+        employeeName: user.name ?? "An employee",
+        leaveType: input.type,
+        startDate: start,
+        endDate: end,
+        reason: input.reason,
+      })
+    )
+  );
   revalidatePath("/leave");
   return leave;
 }
@@ -457,6 +515,13 @@ export async function reviewLeaveRequest(leaveId: string, status: "APPROVED" | "
     `Your ${leave.type} leave request was ${status.toLowerCase()}`,
     { type: "LeaveRequest", id: leaveId }
   );
+  await sendLeaveDecisionEmail({
+    recipientId: leave.employeeId,
+    leaveType: leave.type,
+    startDate: leave.startDate,
+    endDate: leave.endDate,
+    status,
+  });
   revalidatePath("/leave");
   revalidatePath("/attendance");
   revalidatePath("/");

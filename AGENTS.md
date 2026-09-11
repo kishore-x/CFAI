@@ -9,4 +9,5 @@ Standard Next.js 16 (App Router) project. No non-standard conventions.
 - Server actions live in `src/app/actions.ts`, plus per-domain action files next to their pages (`src/app/tasks/task-actions.ts`, `src/app/messages/chat-actions.ts`, `src/app/daily-updates/daily-update-actions.ts`, `src/app/settings/settings-actions.ts`, `src/app/projects/milestone-actions.ts`)
 - Reusable calculations (progress, workload, attendance summaries, leave balance) live in `src/lib/services.ts` and `src/lib/attendance-stats.ts` — don't reimplement them inline in a page
 - No Audit Log module (explicitly out of scope, do not re-add). `ActivityLog` still exists as internal bookkeeping and powers the per-task/per-project "Activity" feeds only.
+- Email: all outbound email goes through `src/lib/email.ts` (Resend) — never call Resend directly from a page/action. Each event helper (`sendTaskAssignedEmail`, etc.) internally checks the recipient's `NotificationPreference` and swallows send failures, so it's always safe to call after the matching in-app `notify()`/`notifyMany()` call. Only "important" events get email (see that file); don't wire up email for routine/minor updates.
 

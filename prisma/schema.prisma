@@ -115,9 +115,34 @@ model Employee {
   conversations   ConversationParticipant[]
   messages        Message[]
   reviewedLeavePolicyChanges LeavePolicy[] @relation("LeavePolicyUpdatedBy")
+  notificationPreference NotificationPreference?
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+// Per-user email notification preferences. In-app notifications (Notification
+// model) always fire regardless of these — this only gates the email channel.
+// One row per employee, created lazily with defaults (all ON) on first read.
+model NotificationPreference {
+  id          String   @id @default(cuid())
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId  String   @unique
+
+  emailEnabled            Boolean @default(true)
+  taskAssigned            Boolean @default(true)
+  taskCompleted           Boolean @default(true)
+  taskBlocked             Boolean @default(true)
+  clarificationRequested  Boolean @default(true)
+  leaveRequested          Boolean @default(true)
+  leaveApproved           Boolean @default(true)
+  leaveRejected           Boolean @default(true)
+  newMessage              Boolean @default(true)
+  dailyWorkUpdate         Boolean @default(true)
+  deadlineReminder        Boolean @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Attendance {
@@ -231,6 +256,11 @@ model Task {
   reviewedAt  DateTime?
   acceptedAt  DateTime?
 
+  // Dedupe marker for deadline-reminder emails: null, "APPROACHING", or
+  // "OVERDUE". A reminder only fires again when the task moves to a worse
+  // stage than the last one it was emailed for — prevents repeat spam.
+  deadlineReminderStage String?
+
   comments    TaskComment[]
 
   completedAt DateTime?
@@ -280,6 +310,10 @@ model ConversationParticipant {
   employee       Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   employeeId     String
   lastReadAt     DateTime?
+  // Last time we emailed this participant about unread messages in this
+  // conversation — while it's more recent than lastReadAt, further new
+  // messages don't trigger another email (avoids spamming a rapid chat).
+  lastEmailedAt  DateTime?
 
   @@unique([conversationId, employeeId])
 }

@@ -36,6 +36,17 @@ For Supabase specifically:
 
 Also set `AUTH_SECRET` (a random 32-byte base64 string, e.g. `openssl rand -base64 32`) — required by Auth.js to sign session tokens. Must be set on Vercel too (Production and Preview).
 
+### Email notifications (optional)
+
+Set these to turn on transactional email via [Resend](https://resend.com) — if `RESEND_API_KEY` or `EMAIL_FROM` is missing, the app just skips sending email and keeps working (in-app notifications are unaffected):
+
+- `RESEND_API_KEY` — server-side only, never exposed to the client.
+- `EMAIL_FROM` — the verified sender address/domain in your Resend account.
+- `APP_URL` — the app's public base URL, used to build links in emails (e.g. `https://cfai-eight.vercel.app`). Falls back to `http://localhost:3000` outside production; never defaults to localhost in production.
+- `CRON_SECRET` — shared secret for the deadline-reminder cron route (`/api/cron/deadline-reminders`, scheduled daily in `vercel.json`). Vercel automatically sends it as a Bearer token to cron-triggered requests when this env var is set on the project.
+
+Every user manages their own email categories in **Settings → Notifications**; in-app notifications always fire regardless of these settings.
+
 ## Logging in
 
 Run `npx tsx prisma/seed.ts` to (re)create the employee roster with fresh random temporary passwords — it prints a credentials table to the console once. Share each password with its owner; everyone is forced to set their own password on first login (`/account/change-password`). Passwords are bcrypt-hashed; nothing plaintext is ever stored.
@@ -47,3 +58,4 @@ See `prisma/schema.prisma`: `Employee`, `Attendance`, `LeaveRequest`, `Project`,
 ## Notes
 
 - No passwords, tokens, or API keys are stored anywhere in this app — only usernames and public project/repo links.
+- All outbound email goes through the single service in `src/lib/email.ts` — never call Resend directly elsewhere.

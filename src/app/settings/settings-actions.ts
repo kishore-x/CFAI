@@ -65,3 +65,33 @@ export async function updateAttendanceConfig(officeStartTime: string, graceMinut
   revalidatePath("/settings");
   revalidatePath("/");
 }
+
+// ---------- Notification preferences (every user manages only their own) ----------
+
+const EMAIL_PREF_KEYS = [
+  "emailEnabled",
+  "taskAssigned",
+  "taskCompleted",
+  "taskBlocked",
+  "clarificationRequested",
+  "leaveRequested",
+  "leaveApproved",
+  "leaveRejected",
+  "newMessage",
+  "dailyWorkUpdate",
+  "deadlineReminder",
+] as const;
+
+type EmailPrefKey = (typeof EMAIL_PREF_KEYS)[number];
+
+export async function updateMyNotificationPreference(key: EmailPrefKey, value: boolean) {
+  const user = await requireUser();
+  if (!EMAIL_PREF_KEYS.includes(key)) throw new Error("Invalid preference");
+
+  await prisma.notificationPreference.upsert({
+    where: { employeeId: user.id },
+    create: { employeeId: user.id, [key]: value } as never,
+    update: { [key]: value } as never,
+  });
+  revalidatePath("/settings");
+}

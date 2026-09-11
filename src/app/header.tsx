@@ -28,6 +28,7 @@ const NAV_BY_ROLE: Record<string, { href: string; label: string }[]> = {
     { href: "/messages", label: "Messages" },
     { href: "/reports", label: "Reports" },
     { href: "/notifications", label: "Notifications" },
+    { href: "/settings", label: "Settings" },
   ],
   DEVELOPER: [
     { href: "/", label: "Dashboard" },
@@ -38,6 +39,7 @@ const NAV_BY_ROLE: Record<string, { href: string; label: string }[]> = {
     { href: "/messages", label: "Messages" },
     { href: "/employees", label: "My Profile" },
     { href: "/notifications", label: "Notifications" },
+    { href: "/settings", label: "Settings" },
   ],
 };
 

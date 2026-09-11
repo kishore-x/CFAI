@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { requireUser, hasCompanyWideView, assertCanAccessConversation, ForbiddenError } from "@/lib/authorize";
 import { notify } from "@/lib/notify";
+import { sendNewMessageEmail } from "@/lib/email";
 
 /** Finds or creates a 1:1 conversation between the current user and another employee. */
 export async function getOrCreateConversation(otherEmployeeId: string): Promise<string> {
@@ -57,6 +58,29 @@ export async function sendMessage(conversationId: string, content: string) {
   });
   await Promise.all(
     others.map((p) => notify(p.employeeId, "NEW_MESSAGE", `New message from ${user.name ?? "a teammate"}`, { type: "Conversation", id: conversationId }))
+  );
+
+  const preview = trimmed.length > 140 ? `${trimmed.slice(0, 140)}…` : trimmed;
+  const now = new Date();
+  await Promise.all(
+    others.map(async (p) => {
+      // If we already emailed this recipient about unread messages in this
+      // conversation and they still haven't read since then, don't email
+      // again for every new message in a rapid back-and-forth.
+      const alreadyNotifiedForUnread = p.lastEmailedAt && (!p.lastReadAt || p.lastEmailedAt > p.lastReadAt);
+      if (alreadyNotifiedForUnread) return;
+
+      await sendNewMessageEmail({
+        recipientId: p.employeeId,
+        conversationId,
+        senderName: user.name ?? "a teammate",
+        preview,
+      });
+      await prisma.conversationParticipant.update({
+        where: { conversationId_employeeId: { conversationId, employeeId: p.employeeId } },
+        data: { lastEmailedAt: now },
+      });
+    })
   );
 
   revalidatePath(`/messages/${conversationId}`);

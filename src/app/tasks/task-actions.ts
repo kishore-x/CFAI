@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { requireUser, canAccessTask, hasCompanyWideView, ForbiddenError, logActivity } from "@/lib/authorize";
 import { notify, companyWideRecipientIds } from "@/lib/notify";
+import { sendClarificationRequestedEmail } from "@/lib/email";
 
 async function loadAndCheckTask(taskId: string) {
   const user = await requireUser();
@@ -47,6 +48,17 @@ export async function requestClarification(taskId: string, message: string) {
   await logActivity({ actorId: user.id, action: "TASK_CLARIFICATION_REQUESTED", entityType: "Task", entityId: taskId });
   const recipients = await companyWideRecipientIds(user.id);
   await Promise.all(recipients.map((id) => notify(id, "TASK_CLARIFICATION", `${user.name ?? "A developer"} needs clarification on: ${task.title}`, { type: "Task", id: taskId })));
+  await Promise.all(
+    recipients.map((id) =>
+      sendClarificationRequestedEmail({
+        recipientId: id,
+        taskId,
+        taskTitle: task.title,
+        developerName: user.name ?? "A developer",
+        message,
+      })
+    )
+  );
   revalidatePath(`/tasks/${taskId}`);
 }
 
