@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { updateTaskStatus } from "@/app/actions";
 import { TaskPriorityLabel } from "@/lib/ui";
 
@@ -68,7 +69,9 @@ export function TaskBoard({ tasks, editable }: { tasks: Task[]; editable: boolea
                     onDragStart={() => setDragId(t.id)}
                     className={`rounded-md bg-white/5 p-2.5 text-xs ${editable ? "cursor-grab active:cursor-grabbing" : ""} ${isPending ? "opacity-70" : ""}`}
                   >
-                    <div className="font-medium text-[var(--foreground)] mb-1">{t.title}</div>
+                    <Link href={`/tasks/${t.id}`} className="font-medium text-[var(--foreground)] mb-1 block hover:underline">
+                      {t.title}
+                    </Link>
                     <div className="text-[var(--muted)]">{t.projectName}</div>
                     <div className="flex items-center justify-between mt-1.5">
                       <TaskPriorityLabel priority={t.priority} />

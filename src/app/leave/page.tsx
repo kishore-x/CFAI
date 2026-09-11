@@ -1,8 +1,9 @@
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/db";
-import { Card, LeaveStatusBadge, Avatar } from "@/lib/ui";
+import { Card, StatCard, LeaveStatusBadge, Avatar } from "@/lib/ui";
 import { requireUser, hasCompanyWideView } from "@/lib/authorize";
+import { getLeaveBalance } from "@/lib/services";
 import { LeaveForm } from "./leave-form";
 import { LeaveReviewRow } from "./leave-review-row";
 
@@ -10,11 +11,14 @@ export default async function LeavePage() {
   const user = await requireUser();
   const canReview = hasCompanyWideView(user);
 
-  const leaves = await prisma.leaveRequest.findMany({
-    where: canReview ? {} : { employeeId: user.id },
-    include: { employee: true, reviewedBy: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const [leaves, balances] = await Promise.all([
+    prisma.leaveRequest.findMany({
+      where: canReview ? {} : { employeeId: user.id },
+      include: { employee: true, reviewedBy: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    getLeaveBalance(user.id),
+  ]);
 
   const pending = leaves.filter((l) => l.status === "PENDING");
 
@@ -29,7 +33,16 @@ export default async function LeavePage() {
         </div>
       </div>
 
-      {!canReview && <LeaveForm />}
+      {!canReview && (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {balances.map((b) => (
+              <StatCard key={b.policyId} label={b.name} value={`${b.remaining}/${b.allowance}`} hint={`${b.used} used`} />
+            ))}
+          </div>
+          <LeaveForm balances={balances} />
+        </>
+      )}
 
       <Card className="p-5 overflow-x-auto">
         <table className="w-full text-left">

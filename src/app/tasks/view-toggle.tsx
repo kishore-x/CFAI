@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { TaskBoard } from "./task-board";
 import { TaskPriorityLabel } from "@/lib/ui";
 import { TaskStatusSelect } from "./task-status-select";
@@ -60,7 +61,11 @@ export function TaskViewToggle({ tasks, companyWide, currentUserId }: { tasks: T
                 const editable = companyWide || t.assignedToId === currentUserId;
                 return (
                   <tr key={t.id} className="border-t border-[var(--border)]">
-                    <td className="py-2.5 pr-4 text-sm">{t.title}</td>
+                    <td className="py-2.5 pr-4 text-sm">
+                      <Link href={`/tasks/${t.id}`} className="hover:underline">
+                        {t.title}
+                      </Link>
+                    </td>
                     <td className="py-2.5 pr-4 text-sm text-[var(--muted)]">{t.projectName}</td>
                     {companyWide && <td className="py-2.5 pr-4 text-sm text-[var(--muted)]">{t.assignedToName ?? "Unassigned"}</td>}
                     <td className="py-2.5 pr-4">

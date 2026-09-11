@@ -109,6 +109,17 @@ export function canReviewLeave(user: SessionUser) {
   return hasCompanyWideView(user);
 }
 
+export async function canAccessConversation(user: SessionUser, conversationId: string): Promise<boolean> {
+  const participant = await prisma.conversationParticipant.findUnique({
+    where: { conversationId_employeeId: { conversationId, employeeId: user.id } },
+  });
+  return participant !== null;
+}
+
+export async function assertCanAccessConversation(user: SessionUser, conversationId: string) {
+  if (!(await canAccessConversation(user, conversationId))) throw new ForbiddenError("Not permitted to access this conversation");
+}
+
 export async function logActivity(params: {
   actorId: string;
   action: string;

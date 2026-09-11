@@ -7,6 +7,7 @@ import { requireUser, canAccessProject, canManageProject } from "@/lib/authorize
 import { ProjectStatusControl } from "../project-status-control";
 import { MemberList } from "../member-list";
 import { TaskList } from "../task-list";
+import { MilestoneList } from "../milestone-list";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -41,6 +42,17 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     orderBy: { createdAt: "desc" },
     take: 10,
   });
+
+  const milestones = await prisma.milestone.findMany({ where: { projectId: id }, orderBy: [{ order: "asc" }, { dueDate: "asc" }] });
+
+  let deadlineNote: { icon: string; text: string } | null = null;
+  if (project.deadline) {
+    const now = new Date();
+    const daysRemaining = Math.ceil((project.deadline.getTime() - now.getTime()) / 86400000);
+    if (daysRemaining < 0 && project.status !== "COMPLETED") deadlineNote = { icon: "🔴", text: "Project overdue" };
+    else if (daysRemaining <= 7 && project.status !== "COMPLETED") deadlineNote = { icon: "⚠", text: `Deadline approaching — ${daysRemaining} day${daysRemaining === 1 ? "" : "s"} remaining` };
+    else if (project.status !== "COMPLETED") deadlineNote = { icon: "", text: `${daysRemaining} days remaining` };
+  }
 
   return (
     <div className="space-y-6">
@@ -83,7 +95,16 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
       <div className="grid md:grid-cols-2 gap-4 text-sm text-[var(--muted)]">
         {project.startDate && <div>Started: {new Date(project.startDate).toLocaleDateString("en-GB")}</div>}
-        {project.deadline && <div>Deadline: {new Date(project.deadline).toLocaleDateString("en-GB")}</div>}
+        {project.deadline && (
+          <div>
+            Deadline: {new Date(project.deadline).toLocaleDateString("en-GB")}
+            {deadlineNote && (
+              <span className={deadlineNote.icon === "🔴" ? "text-red-400 ml-2" : deadlineNote.icon === "⚠" ? "text-white ml-2" : "ml-2"}>
+                {deadlineNote.icon} {deadlineNote.text}
+              </span>
+            )}
+          </div>
+        )}
         {project.githubRepoUrl && (
           <a href={project.githubRepoUrl} target="_blank" className="text-[var(--accent)] hover:underline">
             GitHub repo
@@ -95,6 +116,15 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           </a>
         )}
       </div>
+
+      <Card className="p-5">
+        <h2 className="font-semibold mb-3">Milestones</h2>
+        <MilestoneList
+          projectId={project.id}
+          milestones={milestones.map((m) => ({ id: m.id, name: m.name, status: m.status, progress: m.progress, dueDate: m.dueDate ? m.dueDate.toISOString() : null }))}
+          canManage={canManage}
+        />
+      </Card>
 
       <Card className="p-5">
         <h2 className="font-semibold mb-1">Team</h2>

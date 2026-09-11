@@ -62,6 +62,17 @@ enum LeaveStatus {
   REJECTED
 }
 
+enum MilestoneStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum LeavePeriod {
+  MONTHLY
+  ANNUAL
+}
+
 model Employee {
   id            String   @id @default(cuid())
   name          String
@@ -90,6 +101,11 @@ model Employee {
   assignedTasks   Task[]         @relation("TaskAssignedTo")
   activity        ActivityLog[]
   notifications   Notification[]
+  taskComments    TaskComment[]
+  dailyUpdates    DailyWorkUpdate[]
+  conversations   ConversationParticipant[]
+  messages        Message[]
+  reviewedLeavePolicyChanges LeavePolicy[] @relation("LeavePolicyUpdatedBy")
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -148,6 +164,7 @@ model Project {
 
   assignments ProjectAssignment[]
   tasks       Task[]
+  milestones  Milestone[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -187,9 +204,114 @@ model Task {
   createdBy    Employee  @relation("TaskCreatedBy", fields: [createdById], references: [id])
   createdById  String
 
+  // Acknowledgment lifecycle, tracked alongside `status` so the PM can tell
+  // a task was actually seen, independent of work having started.
+  reviewedAt  DateTime?
+  acceptedAt  DateTime?
+
+  comments    TaskComment[]
+
   completedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String
+  author    Employee @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+}
+
+model DailyWorkUpdate {
+  id         String   @id @default(cuid())
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId String
+  date       DateTime // day this update is for, stored at UTC midnight
+  completed  String?
+  inProgress String?
+  blocked    String?
+  tomorrow   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([employeeId, date])
+}
+
+model Conversation {
+  id           String                    @id @default(cuid())
+  participants ConversationParticipant[]
+  messages     Message[]
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversationId String
+  employee       Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId     String
+  lastReadAt     DateTime?
+
+  @@unique([conversationId, employeeId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversationId String
+  sender         Employee     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  senderId       String
+  content        String
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+model LeavePolicy {
+  id                 String      @id @default(cuid())
+  name               String      @unique
+  period             LeavePeriod @default(ANNUAL)
+  monthlyAllowance    Int?
+  annualAllowance     Int?
+  carryForward        Boolean     @default(false)
+  maxCarryForward     Int?
+  active              Boolean     @default(true)
+
+  updatedBy   Employee? @relation("LeavePolicyUpdatedBy", fields: [updatedById], references: [id])
+  updatedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AttendanceConfig {
+  id              String @id @default("singleton")
+  officeStartTime String @default("09:30") // "HH:MM", 24-hour
+  graceMinutes    Int    @default(15)
+  updatedAt       DateTime @updatedAt
+}
+
+model Milestone {
+  id          String          @id @default(cuid())
+  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String
+  name        String
+  description String?
+  startDate   DateTime?
+  dueDate     DateTime?
+  status      MilestoneStatus @default(NOT_STARTED)
+  progress    Int             @default(0)
+  order       Int             @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Notification {

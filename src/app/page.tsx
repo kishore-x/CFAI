@@ -5,6 +5,8 @@ import { prisma } from "@/lib/db";
 import { Card, StatCard, ProjectStatusBadge, AttendanceBadge, TaskStatusBadge, Avatar, fmtTime } from "@/lib/ui";
 import { requireUser, isOwner, hasCompanyWideView } from "@/lib/authorize";
 import { AssignTaskForm } from "@/app/tasks/assign-task-form";
+import { DailyUpdateForm } from "@/app/daily-updates/daily-update-form";
+import { getDeveloperWorkload } from "@/lib/services";
 
 function startOfDay(d: Date) {
   const c = new Date(d);
@@ -44,14 +46,16 @@ export default async function OverviewPage() {
 async function CompanyDashboard({ user, today }: { user: { id: string; role: string }; today: Date }) {
   const owner = isOwner(user);
 
-  const [employees, todaysAttendance, projects, allTasks, pendingLeave, activity] = await Promise.all([
+  const [employees, todaysAttendance, projects, allTasks, pendingLeaveRequests, attendanceConfig, activity] = await Promise.all([
     prisma.employee.findMany({ where: { active: true } }),
     prisma.attendance.findMany({ where: { date: today }, include: { employee: true } }),
     prisma.project.findMany({ include: { tasks: true, assignments: { where: { active: true }, include: { employee: true } } }, orderBy: { updatedAt: "desc" } }),
     prisma.task.findMany({ include: { assignedTo: true, project: true } }),
-    prisma.leaveRequest.count({ where: { status: "PENDING" } }),
+    prisma.leaveRequest.findMany({ where: { status: "PENDING" }, include: { employee: true } }),
+    prisma.attendanceConfig.findUnique({ where: { id: "singleton" } }),
     owner ? prisma.activityLog.findMany({ include: { actor: true }, orderBy: { createdAt: "desc" }, take: 10 }) : Promise.resolve([]),
   ]);
+  const pendingLeave = pendingLeaveRequests.length;
 
   const present = todaysAttendance.filter((a) => a.status === "PRESENT");
   const wfh = present.filter((a) => a.workMode === "WFH").length;
@@ -92,12 +96,21 @@ async function CompanyDashboard({ user, today }: { user: { id: string; role: str
         </div>
       )}
 
-      <NeedsAttention tasks={allTasks} />
+      <NeedsAttention tasks={allTasks} pendingLeaveRequests={pendingLeaveRequests} projects={projects} />
 
-      <Card className="p-5">
-        <h2 className="font-semibold mb-4">Developer progress</h2>
-        <DeveloperProgressTable developers={developers.length > 0 ? developers : employees} tasks={allTasks} />
-      </Card>
+      <div className="grid md:grid-cols-2 gap-6">
+        <Card className="p-5">
+          <h2 className="font-semibold mb-4">Developer progress</h2>
+          <DeveloperProgressTable developers={developers.length > 0 ? developers : employees} tasks={allTasks} />
+        </Card>
+
+        <Card className="p-5">
+          <h2 className="font-semibold mb-4">Team workload</h2>
+          <TeamWorkload developers={developers.length > 0 ? developers : employees} tasks={allTasks} />
+        </Card>
+      </div>
+
+      <AttendanceIssues employees={employees} todaysAttendance={todaysAttendance} config={attendanceConfig} />
 
       <div className="grid md:grid-cols-2 gap-6">
         <Card className="p-5">
@@ -171,7 +184,7 @@ async function CompanyDashboard({ user, today }: { user: { id: string; role: str
 // ---------------- DEVELOPER ----------------
 
 async function DeveloperDashboard({ user, today }: { user: { id: string; role: string; name?: string | null }; today: Date }) {
-  const [employee, attendance, tasks, assignments] = await Promise.all([
+  const [employee, attendance, tasks, assignments, todayUpdate] = await Promise.all([
     prisma.employee.findUniqueOrThrow({ where: { id: user.id } }),
     prisma.attendance.findUnique({ where: { employeeId_date: { employeeId: user.id, date: today } } }),
     prisma.task.findMany({
@@ -183,6 +196,7 @@ async function DeveloperDashboard({ user, today }: { user: { id: string; role: s
       where: { employeeId: user.id, active: true },
       include: { project: { include: { tasks: true } } },
     }),
+    prisma.dailyWorkUpdate.findUnique({ where: { employeeId_date: { employeeId: user.id, date: today } } }),
   ]);
 
   const now = new Date();
@@ -252,6 +266,11 @@ async function DeveloperDashboard({ user, today }: { user: { id: string; role: s
           {tasks.length === 0 && <li className="text-sm text-[var(--muted)]">No tasks assigned yet.</li>}
         </ul>
       </Card>
+
+      <Card className="p-5">
+        <h2 className="font-semibold mb-3">My daily update</h2>
+        <DailyUpdateForm initial={todayUpdate ? { completed: todayUpdate.completed, inProgress: todayUpdate.inProgress, blocked: todayUpdate.blocked, tomorrow: todayUpdate.tomorrow } : undefined} />
+      </Card>
     </div>
   );
 }
@@ -287,25 +306,55 @@ type AttentionTask = {
   project: { id: string; name: string };
 };
 
-function NeedsAttention({ tasks }: { tasks: AttentionTask[] }) {
+function NeedsAttention({
+  tasks,
+  pendingLeaveRequests,
+  projects,
+}: {
+  tasks: AttentionTask[];
+  pendingLeaveRequests: { id: string; employee: { name: string }; type: string }[];
+  projects: { id: string; name: string; deadline: Date | null; status: string }[];
+}) {
   const startOfToday = startOfDay(new Date());
 
-  const items = tasks
+  const taskItems = tasks
     .filter((t) => t.status !== "COMPLETED")
     .map((t) => {
       if (t.dueDate && new Date(t.dueDate) < startOfToday) {
         const days = Math.floor((startOfToday.getTime() - new Date(t.dueDate).getTime()) / 86400000);
-        return { t, dot: "🔴", note: `${days} day${days > 1 ? "s" : ""} overdue`, weight: 3 };
+        return { key: `task-${t.id}`, href: `/tasks/${t.id}`, dot: "🔴", label: t.title, sub: t.assignedTo?.name ?? "Unassigned", note: `${days} day${days > 1 ? "s" : ""} overdue`, weight: 4 };
       }
-      if (t.status === "BLOCKED") return { t, dot: "🟠", note: "Blocked", weight: 2 };
+      if (t.status === "BLOCKED") return { key: `task-${t.id}`, href: `/tasks/${t.id}`, dot: "🟠", label: t.title, sub: t.assignedTo?.name ?? "Unassigned", note: "Blocked", weight: 3 };
+      if (t.status === "IN_REVIEW") return { key: `task-${t.id}`, href: `/tasks/${t.id}`, dot: "🟣", label: t.title, sub: t.assignedTo?.name ?? "Unassigned", note: "Awaiting review", weight: 2 };
       if (t.dueDate && startOfDay(new Date(t.dueDate)).getTime() === startOfToday.getTime()) {
-        return { t, dot: "🟡", note: "Due today", weight: 1 };
+        return { key: `task-${t.id}`, href: `/tasks/${t.id}`, dot: "🟡", label: t.title, sub: t.assignedTo?.name ?? "Unassigned", note: "Due today", weight: 1 };
       }
       return null;
     })
-    .filter((x): x is NonNullable<typeof x> => x !== null)
-    .sort((a, b) => b.weight - a.weight)
-    .slice(0, 6);
+    .filter((x): x is NonNullable<typeof x> => x !== null);
+
+  const leaveItems = pendingLeaveRequests.map((l) => ({
+    key: `leave-${l.id}`,
+    href: "/leave",
+    dot: "🟣",
+    label: `${l.employee.name} — ${l.type} leave`,
+    sub: "",
+    note: "Pending approval",
+    weight: 3,
+  }));
+
+  const nowMs = startOfToday.getTime();
+  const deadlineItems = projects
+    .filter((p) => p.deadline && p.status !== "COMPLETED" && p.status !== "CANCELLED")
+    .map((p) => {
+      const days = Math.ceil((new Date(p.deadline!).getTime() - nowMs) / 86400000);
+      if (days < 0) return { key: `proj-${p.id}`, href: `/projects/${p.id}`, dot: "🔴", label: p.name, sub: "", note: "Project overdue", weight: 4 };
+      if (days <= 7) return { key: `proj-${p.id}`, href: `/projects/${p.id}`, dot: "⚠️", label: p.name, sub: "", note: `${days}d to deadline`, weight: 2 };
+      return null;
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null);
+
+  const items = [...taskItems, ...leaveItems, ...deadlineItems].sort((a, b) => b.weight - a.weight).slice(0, 8);
 
   if (items.length === 0) return null;
 
@@ -313,16 +362,101 @@ function NeedsAttention({ tasks }: { tasks: AttentionTask[] }) {
     <Card className="p-5">
       <h2 className="font-semibold mb-3">Needs attention</h2>
       <ul className="space-y-2">
-        {items.map(({ t, dot, note }) => (
-          <li key={t.id} className="flex items-center justify-between text-sm">
+        {items.map((item) => (
+          <li key={item.key} className="flex items-center justify-between text-sm">
             <span className="flex items-center gap-2 min-w-0">
-              <span>{dot}</span>
-              <Link href={`/projects/${t.project.id}`} className="truncate hover:underline">
-                {t.title}
+              <span>{item.dot}</span>
+              <Link href={item.href} className="truncate hover:underline">
+                {item.label}
               </Link>
-              <span className="text-[var(--muted)] text-xs shrink-0">{t.assignedTo?.name ?? "Unassigned"}</span>
+              {item.sub && <span className="text-[var(--muted)] text-xs shrink-0">{item.sub}</span>}
             </span>
-            <span className="text-xs text-[var(--muted)] shrink-0">{note}</span>
+            <span className="text-xs text-[var(--muted)] shrink-0">{item.note}</span>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
+function TeamWorkload({ developers, tasks }: { developers: { id: string; name: string }[]; tasks: { assignedToId: string | null; status: string; priority: string }[] }) {
+  const WORKLOAD_STYLE: Record<string, string> = {
+    LOW: "border border-[var(--border)] text-[var(--muted)]",
+    NORMAL: "border border-white/40 text-[var(--foreground)]",
+    HIGH: "bg-gray-400 text-black",
+    OVERLOADED: "bg-white text-black",
+  };
+  return (
+    <ul className="space-y-2">
+      {developers.map((d) => {
+        const mine = tasks.filter((t) => t.assignedToId === d.id);
+        const { activeCount, level } = getDeveloperWorkload(mine);
+        return (
+          <li key={d.id} className="flex items-center justify-between text-sm">
+            <Link href={`/employees/${d.id}`} className="hover:underline">
+              {d.name}
+            </Link>
+            <span className="flex items-center gap-2">
+              <span className="text-xs text-[var(--muted)]">{activeCount} active</span>
+              <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${WORKLOAD_STYLE[level]}`}>{level}</span>
+            </span>
+          </li>
+        );
+      })}
+      {developers.length === 0 && <li className="text-sm text-[var(--muted)]">No developers yet.</li>}
+    </ul>
+  );
+}
+
+function AttendanceIssues({
+  employees,
+  todaysAttendance,
+  config,
+}: {
+  employees: { id: string; name: string }[];
+  todaysAttendance: { employeeId: string; status: string; clockIn: Date | null; clockOut: Date | null }[];
+  config: { officeStartTime: string; graceMinutes: number } | null;
+}) {
+  const officeStart = config?.officeStartTime ?? "09:30";
+  const grace = config?.graceMinutes ?? 15;
+  const [h, m] = officeStart.split(":").map(Number);
+  const thresholdMinutes = h * 60 + m + grace;
+
+  const issues: { key: string; label: string; note: string }[] = [];
+  for (const e of employees) {
+    const a = todaysAttendance.find((x) => x.employeeId === e.id);
+    if (!a) continue;
+    if (a.status === "PRESENT" && a.clockIn) {
+      const inMinutes = a.clockIn.getUTCHours() * 60 + a.clockIn.getUTCMinutes();
+      if (inMinutes > thresholdMinutes) {
+        issues.push({ key: `late-${e.id}`, label: e.name, note: `Late check-in — ${a.clockIn.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}` });
+      }
+    }
+    if (a.status === "PRESENT" && a.clockIn && !a.clockOut) {
+      issues.push({ key: `nocheckout-${e.id}`, label: e.name, note: "Missing checkout" });
+    }
+    if (a.status !== "PRESENT" && a.status !== "LEAVE") {
+      issues.push({ key: `absent-${e.id}`, label: e.name, note: "Absent" });
+    }
+  }
+  const noRecord = employees.filter((e) => !todaysAttendance.some((a) => a.employeeId === e.id));
+
+  if (issues.length === 0 && noRecord.length === 0) return null;
+
+  return (
+    <Card className="p-5">
+      <h2 className="font-semibold mb-3">Attendance issues</h2>
+      <ul className="space-y-1.5 text-sm">
+        {issues.map((i) => (
+          <li key={i.key} className="flex items-center justify-between">
+            <span>{i.label}</span>
+            <span className="text-xs text-[var(--muted)]">{i.note}</span>
+          </li>
+        ))}
+        {noRecord.map((e) => (
+          <li key={`norecord-${e.id}`} className="flex items-center justify-between">
+            <span>{e.name}</span>
+            <span className="text-xs text-[var(--muted)]">No attendance recorded</span>
           </li>
         ))}
       </ul>
