@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db";
 import { verifyPassword } from "@/lib/password";
 import { authConfig } from "@/lib/auth.config";
+import { isQuickLoginEnabled } from "@/lib/quick-login";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -55,10 +56,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         employeeId: { label: "Employee", type: "text" },
       },
       authorize: async (credentials) => {
-        // Demo/dev convenience only -- never a valid auth path in production,
-        // regardless of what the client sends.
-        const quickLoginEnabled = process.env.VERCEL_ENV !== "production" && process.env.NODE_ENV !== "production";
-        if (!quickLoginEnabled) return null;
+        // Demo/dev convenience -- gated by a single flag (src/lib/quick-login.ts)
+        // rather than checked inline, so disabling it later is a one-line change.
+        if (!isQuickLoginEnabled()) return null;
 
         const employeeId = credentials?.employeeId as string | undefined;
         if (!employeeId) return null;

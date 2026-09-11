@@ -2,11 +2,10 @@ export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/db";
 import { LoginPageClient } from "./login-form";
-
-const QUICK_LOGIN_ENABLED = process.env.VERCEL_ENV !== "production" && process.env.NODE_ENV !== "production";
+import { isQuickLoginEnabled } from "@/lib/quick-login";
 
 export default async function LoginPage() {
-  const roster = QUICK_LOGIN_ENABLED
+  const roster = isQuickLoginEnabled()
     ? await prisma.employee.findMany({
         where: { active: true },
         select: { id: true, name: true, role: true, title: true },
