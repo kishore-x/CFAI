@@ -55,6 +55,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         employeeId: { label: "Employee", type: "text" },
       },
       authorize: async (credentials) => {
+        // Demo/dev convenience only -- never a valid auth path in production,
+        // regardless of what the client sends.
+        const quickLoginEnabled = process.env.VERCEL_ENV !== "production" && process.env.NODE_ENV !== "production";
+        if (!quickLoginEnabled) return null;
+
         const employeeId = credentials?.employeeId as string | undefined;
         if (!employeeId) return null;
 

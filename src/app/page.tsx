@@ -48,7 +48,7 @@ async function CompanyDashboard({ user, today }: { user: { id: string; role: str
     prisma.employee.findMany({ where: { active: true } }),
     prisma.attendance.findMany({ where: { date: today }, include: { employee: true } }),
     prisma.project.findMany({ include: { tasks: true, assignments: { where: { active: true }, include: { employee: true } } }, orderBy: { updatedAt: "desc" } }),
-    prisma.task.findMany({ include: { assignedTo: true } }),
+    prisma.task.findMany({ include: { assignedTo: true, project: true } }),
     prisma.leaveRequest.count({ where: { status: "PENDING" } }),
     owner ? prisma.activityLog.findMany({ include: { actor: true }, orderBy: { createdAt: "desc" }, take: 10 }) : Promise.resolve([]),
   ]);
@@ -91,6 +91,8 @@ async function CompanyDashboard({ user, today }: { user: { id: string; role: str
           <StatCard label="Tasks overdue" value={tCounts.overdue} />
         </div>
       )}
+
+      <NeedsAttention tasks={allTasks} />
 
       <Card className="p-5">
         <h2 className="font-semibold mb-4">Developer progress</h2>
@@ -273,6 +275,58 @@ function TaskStatTile({ label, value }: { label: string; value: number }) {
       <div className="text-[var(--muted)] text-xs">{label}</div>
       <div className="text-lg font-semibold">{value}</div>
     </div>
+  );
+}
+
+type AttentionTask = {
+  id: string;
+  title: string;
+  status: string;
+  dueDate: Date | null;
+  assignedTo: { name: string } | null;
+  project: { id: string; name: string };
+};
+
+function NeedsAttention({ tasks }: { tasks: AttentionTask[] }) {
+  const startOfToday = startOfDay(new Date());
+
+  const items = tasks
+    .filter((t) => t.status !== "COMPLETED")
+    .map((t) => {
+      if (t.dueDate && new Date(t.dueDate) < startOfToday) {
+        const days = Math.floor((startOfToday.getTime() - new Date(t.dueDate).getTime()) / 86400000);
+        return { t, dot: "🔴", note: `${days} day${days > 1 ? "s" : ""} overdue`, weight: 3 };
+      }
+      if (t.status === "BLOCKED") return { t, dot: "🟠", note: "Blocked", weight: 2 };
+      if (t.dueDate && startOfDay(new Date(t.dueDate)).getTime() === startOfToday.getTime()) {
+        return { t, dot: "🟡", note: "Due today", weight: 1 };
+      }
+      return null;
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null)
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, 6);
+
+  if (items.length === 0) return null;
+
+  return (
+    <Card className="p-5">
+      <h2 className="font-semibold mb-3">Needs attention</h2>
+      <ul className="space-y-2">
+        {items.map(({ t, dot, note }) => (
+          <li key={t.id} className="flex items-center justify-between text-sm">
+            <span className="flex items-center gap-2 min-w-0">
+              <span>{dot}</span>
+              <Link href={`/projects/${t.project.id}`} className="truncate hover:underline">
+                {t.title}
+              </Link>
+              <span className="text-[var(--muted)] text-xs shrink-0">{t.assignedTo?.name ?? "Unassigned"}</span>
+            </span>
+            <span className="text-xs text-[var(--muted)] shrink-0">{note}</span>
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }
 

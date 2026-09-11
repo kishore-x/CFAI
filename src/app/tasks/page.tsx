@@ -1,28 +1,42 @@
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/db";
-import { Card, TaskPriorityLabel, StatCard } from "@/lib/ui";
+import { StatCard } from "@/lib/ui";
 import { requireUser, hasCompanyWideView } from "@/lib/authorize";
 import { AssignTaskForm } from "./assign-task-form";
-import { TaskStatusSelect } from "./task-status-select";
+import { TaskFilters } from "./task-filters";
+import { TaskViewToggle } from "./view-toggle";
 
-export default async function TasksPage() {
+export default async function TasksPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ project?: string; developer?: string; status?: string; priority?: string }>;
+}) {
   const user = await requireUser();
   const companyWide = hasCompanyWideView(user);
+  const sp = await searchParams;
+
+  const where: Record<string, unknown> = companyWide ? {} : { assignedToId: user.id };
+  if (companyWide) {
+    if (sp.project) where.projectId = sp.project;
+    if (sp.developer) where.assignedToId = sp.developer === "unassigned" ? null : sp.developer;
+    if (sp.status) where.status = sp.status;
+    if (sp.priority) where.priority = sp.priority;
+  }
 
   const tasks = await prisma.task.findMany({
-    where: companyWide ? {} : { assignedToId: user.id },
+    where,
     include: { project: true, assignedTo: true },
     orderBy: [{ status: "asc" }, { dueDate: "asc" }],
   });
 
+  const allForCounts = companyWide ? await prisma.task.findMany() : tasks;
   const counts = {
-    total: tasks.length,
-    completed: tasks.filter((t) => t.status === "COMPLETED").length,
-    inProgress: tasks.filter((t) => t.status === "IN_PROGRESS").length,
-    inReview: tasks.filter((t) => t.status === "IN_REVIEW").length,
-    blocked: tasks.filter((t) => t.status === "BLOCKED").length,
-    todo: tasks.filter((t) => t.status === "TODO").length,
+    completed: allForCounts.filter((t) => t.status === "COMPLETED").length,
+    inProgress: allForCounts.filter((t) => t.status === "IN_PROGRESS").length,
+    inReview: allForCounts.filter((t) => t.status === "IN_REVIEW").length,
+    blocked: allForCounts.filter((t) => t.status === "BLOCKED").length,
+    todo: allForCounts.filter((t) => t.status === "TODO").length,
   };
 
   let projects: { id: string; name: string }[] = [];
@@ -45,58 +59,32 @@ export default async function TasksPage() {
       </div>
 
       {companyWide && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <StatCard label="Completed" value={counts.completed} />
-          <StatCard label="In progress" value={counts.inProgress} />
-          <StatCard label="In review" value={counts.inReview} />
-          <StatCard label="Blocked" value={counts.blocked} />
-          <StatCard label="Todo" value={counts.todo} />
-        </div>
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <StatCard label="Completed" value={counts.completed} />
+            <StatCard label="In progress" value={counts.inProgress} />
+            <StatCard label="In review" value={counts.inReview} />
+            <StatCard label="Blocked" value={counts.blocked} />
+            <StatCard label="Todo" value={counts.todo} />
+          </div>
+          <TaskFilters projects={projects} employees={employees} current={sp} />
+        </>
       )}
 
-      <Card className="p-5 overflow-x-auto">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="text-xs uppercase tracking-wide text-[var(--muted)]">
-              <th className="pb-2 font-medium">Task</th>
-              <th className="pb-2 font-medium">Project</th>
-              {companyWide && <th className="pb-2 font-medium">Assignee</th>}
-              <th className="pb-2 font-medium">Priority</th>
-              <th className="pb-2 font-medium">Due</th>
-              <th className="pb-2 font-medium">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tasks.map((t) => {
-              const overdue = t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "COMPLETED";
-              const editable = companyWide || t.assignedToId === user.id;
-              return (
-                <tr key={t.id} className="border-t border-[var(--border)]">
-                  <td className="py-2.5 pr-4 text-sm">{t.title}</td>
-                  <td className="py-2.5 pr-4 text-sm text-[var(--muted)]">{t.project.name}</td>
-                  {companyWide && <td className="py-2.5 pr-4 text-sm text-[var(--muted)]">{t.assignedTo?.name ?? "Unassigned"}</td>}
-                  <td className="py-2.5 pr-4">
-                    <TaskPriorityLabel priority={t.priority} />
-                  </td>
-                  <td className={`py-2.5 pr-4 text-sm ${overdue ? "text-red-400" : "text-[var(--muted)]"}`}>
-                    {t.dueDate ? new Date(t.dueDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "—"}
-                  </td>
-                  <td className="py-2.5 pr-4">
-                    <TaskStatusSelect taskId={t.id} status={t.status} editable={editable} />
-                  </td>
-                </tr>
-              );
-            })}
-            {tasks.length === 0 && (
-              <tr>
-                <td colSpan={companyWide ? 6 : 5} className="py-6 text-center text-sm text-[var(--muted)]">
-                  No tasks yet.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </Card>
+      <TaskViewToggle
+        tasks={tasks.map((t) => ({
+          id: t.id,
+          title: t.title,
+          status: t.status,
+          priority: t.priority,
+          dueDate: t.dueDate,
+          assignedToId: t.assignedToId,
+          assignedToName: t.assignedTo?.name ?? null,
+          projectName: t.project.name,
+        }))}
+        companyWide={companyWide}
+        currentUserId={user.id}
+      />
     </div>
   );
 }

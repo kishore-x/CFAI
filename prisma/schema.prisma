@@ -89,6 +89,7 @@ model Employee {
   createdTasks    Task[]         @relation("TaskCreatedBy")
   assignedTasks   Task[]         @relation("TaskAssignedTo")
   activity        ActivityLog[]
+  notifications   Notification[]
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -189,6 +190,20 @@ model Task {
   completedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  recipient   Employee @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  recipientId String
+  type        String
+  message     String
+  entityType  String?
+  entityId    String?
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([recipientId, read])
 }
 
 model ActivityLog {

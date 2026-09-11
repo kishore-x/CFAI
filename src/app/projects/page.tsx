@@ -1,13 +1,11 @@
 export const dynamic = "force-dynamic";
 
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Card, ProjectStatusBadge } from "@/lib/ui";
-import { ProjectStatusControl } from "./project-status-control";
-import { TaskList } from "./task-list";
-import { MemberList } from "./member-list";
 import { CreateProjectForm } from "./create-project-form";
 import { AssignTaskForm } from "@/app/tasks/assign-task-form";
-import { requireUser, isOwner, isManager, hasCompanyWideView, canManageProject, visibleProjectIds } from "@/lib/authorize";
+import { requireUser, isOwner, hasCompanyWideView, visibleProjectIds } from "@/lib/authorize";
 
 export default async function ProjectsPage() {
   const user = await requireUser();
@@ -18,20 +16,19 @@ export default async function ProjectsPage() {
     include: {
       manager: { select: { id: true, name: true } },
       assignments: { where: { active: true }, include: { employee: { select: { id: true, name: true } } } },
-      tasks: { orderBy: { createdAt: "asc" }, include: { assignedTo: { select: { id: true, name: true } } } },
+      tasks: true,
     },
     orderBy: { updatedAt: "desc" },
   });
 
-  // For "add member" / "create task assignee" dropdowns.
-  const allEmployees = isOwner(user) || isManager(user)
+  const companyWide = hasCompanyWideView(user);
+  const allEmployees = companyWide
     ? await prisma.employee.findMany({ where: { active: true }, select: { id: true, name: true }, orderBy: { name: "asc" } })
     : [];
   const managers = isOwner(user)
     ? await prisma.employee.findMany({ where: { active: true, role: { in: ["OWNER", "MANAGER"] } }, select: { id: true, name: true }, orderBy: { name: "asc" } })
     : [];
 
-  const companyWide = hasCompanyWideView(user);
   const heading = companyWide ? "Projects" : "My Projects";
 
   return (
@@ -49,79 +46,46 @@ export default async function ProjectsPage() {
         )}
       </div>
 
-      <div className="space-y-4">
+      <div className="grid md:grid-cols-2 gap-4">
         {projects.map((p) => {
           const done = p.tasks.filter((t) => t.status === "COMPLETED").length;
+          const blocked = p.tasks.filter((t) => t.status === "BLOCKED").length;
+          const overdue = p.tasks.filter((t) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "COMPLETED").length;
           const progress = p.progressOverride ?? (p.tasks.length > 0 ? Math.round((done / p.tasks.length) * 100) : 0);
-          const canManage = canManageProject(user);
 
           return (
-            <Card key={p.id} className="p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="font-semibold">{p.name}</h2>
-                    <ProjectStatusBadge status={p.status} />
+            <Link key={p.id} href={`/projects/${p.id}`}>
+              <Card className="p-5 h-full hover:border-white/30 transition-colors">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="font-semibold">{p.name}</h2>
+                      <ProjectStatusBadge status={p.status} />
+                    </div>
+                    {p.client && <div className="text-xs text-[var(--muted)] mt-0.5">{p.client}</div>}
+                    {p.manager && <div className="text-xs text-[var(--muted)] mt-1">Managed by {p.manager.name}</div>}
                   </div>
-                  {p.client && <div className="text-xs text-[var(--muted)] mt-0.5">{p.client}</div>}
-                  {p.description && <div className="text-sm text-[var(--muted)] mt-2">{p.description}</div>}
-                  {p.manager && (
-                    <div className="text-xs text-[var(--muted)] mt-1">Managed by {p.manager.name}</div>
-                  )}
+                  <span className="text-sm text-[var(--muted)] shrink-0">{progress}%</span>
                 </div>
-                {canManage && (
-                  <ProjectStatusControl projectId={p.id} status={p.status} progressOverride={p.progressOverride} />
-                )}
-              </div>
 
-              <div className="mt-4 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${progress}%` }} />
-              </div>
+                <div className="mt-4 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                  <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${progress}%` }} />
+                </div>
 
-              <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-[var(--muted)]">
-                {p.startDate && <span>Started: {new Date(p.startDate).toLocaleDateString("en-GB")}</span>}
-                {p.deadline && <span>Deadline: {new Date(p.deadline).toLocaleDateString("en-GB")}</span>}
-                <span>{done}/{p.tasks.length} tasks done · {progress}%</span>
-                {p.githubRepoUrl && (
-                  <a href={p.githubRepoUrl} target="_blank" className="text-[var(--accent)] hover:underline">
-                    GitHub repo
-                  </a>
-                )}
-                {p.vercelProjectUrl && (
-                  <a href={p.vercelProjectUrl} target="_blank" className="text-[var(--accent)] hover:underline">
-                    Vercel project
-                  </a>
-                )}
-              </div>
-
-              <MemberList
-                projectId={p.id}
-                members={p.assignments.map((a) => ({ id: a.employee.id, name: a.employee.name, role: a.role }))}
-                candidates={allEmployees}
-                canManage={canManage}
-              />
-
-              <TaskList
-                projectId={p.id}
-                tasks={p.tasks.map((t) => ({
-                  id: t.id,
-                  title: t.title,
-                  status: t.status,
-                  priority: t.priority,
-                  dueDate: t.dueDate,
-                  assignedToId: t.assignedToId,
-                  assignedToName: t.assignedTo?.name ?? null,
-                }))}
-                members={p.assignments.map((a) => ({ id: a.employee.id, name: a.employee.name }))}
-                canManage={canManage}
-                currentUserId={user.id}
-              />
-            </Card>
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-[var(--muted)]">
+                  <span>{done}/{p.tasks.length} tasks done</span>
+                  <span>{p.assignments.length} on team</span>
+                  {blocked > 0 && <span className="text-white">{blocked} blocked</span>}
+                  {overdue > 0 && <span className="text-red-400">{overdue} overdue</span>}
+                  {p.deadline && <span>Due {new Date(p.deadline).toLocaleDateString("en-GB")}</span>}
+                </div>
+              </Card>
+            </Link>
           );
         })}
 
         {projects.length === 0 && (
-          <Card className="p-8 text-center text-sm text-[var(--muted)]">
+          <Card className="p-8 text-center text-sm text-[var(--muted)] md:col-span-2">
             No projects to show yet.
           </Card>
         )}

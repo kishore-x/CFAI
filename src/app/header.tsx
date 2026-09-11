@@ -13,7 +13,7 @@ const NAV_BY_ROLE: Record<string, { href: string; label: string }[]> = {
     { href: "/projects", label: "Projects" },
     { href: "/tasks", label: "Tasks" },
     { href: "/reports", label: "Reports" },
-    { href: "/audit", label: "Audit Log" },
+    { href: "/notifications", label: "Notifications" },
   ],
   MANAGER: [
     { href: "/", label: "Dashboard" },
@@ -23,6 +23,7 @@ const NAV_BY_ROLE: Record<string, { href: string; label: string }[]> = {
     { href: "/projects", label: "Projects" },
     { href: "/tasks", label: "Tasks" },
     { href: "/reports", label: "Reports" },
+    { href: "/notifications", label: "Notifications" },
   ],
   DEVELOPER: [
     { href: "/", label: "Dashboard" },
@@ -31,6 +32,7 @@ const NAV_BY_ROLE: Record<string, { href: string; label: string }[]> = {
     { href: "/attendance", label: "My Attendance" },
     { href: "/leave", label: "My Leave" },
     { href: "/employees", label: "My Profile" },
+    { href: "/notifications", label: "Notifications" },
   ],
 };
 
@@ -40,7 +42,7 @@ const ROLE_LABEL: Record<string, string> = {
   DEVELOPER: "Developer",
 };
 
-export function Header({ name, role }: { name: string; role: string }) {
+export function Header({ name, role, unreadCount = 0 }: { name: string; role: string; unreadCount?: number }) {
   const pathname = usePathname();
   const NAV = NAV_BY_ROLE[role] ?? NAV_BY_ROLE.DEVELOPER;
 
@@ -65,6 +67,11 @@ export function Header({ name, role }: { name: string; role: string }) {
               }`}
             >
               {item.label}
+              {item.href === "/notifications" && unreadCount > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-[var(--accent)] text-black text-[10px] font-bold">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </Link>
           ))}
         </nav>

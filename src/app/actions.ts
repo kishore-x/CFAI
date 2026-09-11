@@ -13,6 +13,7 @@ import {
   assertOwner,
   logActivity,
 } from "@/lib/authorize";
+import { notify, notifyMany, companyWideRecipientIds } from "@/lib/notify";
 
 function startOfDay(d: Date) {
   const c = new Date(d);
@@ -175,6 +176,10 @@ export async function addProjectMember(projectId: string, employeeId: string, ro
     entityId: projectId,
     metadata: { employeeId, role },
   });
+  if (employeeId !== user.id) {
+    const project = await prisma.project.findUnique({ where: { id: projectId }, select: { name: true } });
+    await notify(employeeId, "PROJECT_UPDATE", `You were added to project: ${project?.name ?? "a project"}`, { type: "Project", id: projectId });
+  }
   revalidatePath("/projects");
   revalidatePath("/employees");
   revalidatePath("/");
@@ -231,7 +236,11 @@ export async function createTask(input: {
     entityId: task.id,
     metadata: { projectId: input.projectId, assignedToId: input.assignedToId },
   });
+  if (input.assignedToId && input.assignedToId !== user.id) {
+    await notify(input.assignedToId, "TASK_ASSIGNED", `New task assigned: ${input.title}`, { type: "Task", id: task.id });
+  }
   revalidatePath("/projects");
+  revalidatePath("/tasks");
   revalidatePath("/");
   return task;
 }
@@ -257,7 +266,17 @@ export async function updateTaskStatus(taskId: string, status: string) {
     entityId: taskId,
     metadata: { status, projectId: task.projectId },
   });
+  if (status === "BLOCKED" || status === "COMPLETED") {
+    const recipients = await companyWideRecipientIds(user.id);
+    await notifyMany(
+      recipients,
+      status === "BLOCKED" ? "TASK_BLOCKED" : "TASK_COMPLETED",
+      `${task.title} was marked ${status === "BLOCKED" ? "blocked" : "completed"} by ${user.name ?? "a developer"}`,
+      { type: "Task", id: taskId }
+    );
+  }
   revalidatePath("/projects");
+  revalidatePath("/tasks");
   revalidatePath("/");
 }
 
@@ -281,7 +300,11 @@ export async function reassignTask(taskId: string, assignedToId: string | null, 
     entityId: taskId,
     metadata: { assignedToId, projectId: task.projectId },
   });
+  if (assignedToId && assignedToId !== task.assignedToId) {
+    await notify(assignedToId, "TASK_REASSIGNED", `Task reassigned to you: ${task.title}`, { type: "Task", id: taskId });
+  }
   revalidatePath("/projects");
+  revalidatePath("/tasks");
   revalidatePath("/");
 }
 
@@ -304,6 +327,8 @@ export async function submitLeaveRequest(input: { type: string; startDate: strin
     },
   });
   await logActivity({ actorId: user.id, action: "LEAVE_REQUESTED", entityType: "LeaveRequest", entityId: leave.id });
+  const reviewers = await companyWideRecipientIds(user.id);
+  await notifyMany(reviewers, "LEAVE_REQUESTED", `${user.name ?? "An employee"} requested ${input.type} leave`, { type: "LeaveRequest", id: leave.id });
   revalidatePath("/leave");
   return leave;
 }
@@ -323,9 +348,35 @@ export async function reviewLeaveRequest(leaveId: string, status: "APPROVED" | "
     entityId: leaveId,
     metadata: { employeeId: leave.employeeId },
   });
+  await notify(
+    leave.employeeId,
+    status === "APPROVED" ? "LEAVE_APPROVED" : "LEAVE_REJECTED",
+    `Your ${leave.type} leave request was ${status.toLowerCase()}`,
+    { type: "LeaveRequest", id: leaveId }
+  );
   revalidatePath("/leave");
   revalidatePath("/attendance");
   revalidatePath("/");
+}
+
+// ---------- Notifications ----------
+
+export async function markNotificationRead(notificationId: string) {
+  const user = await requireUser();
+  await prisma.notification.updateMany({
+    where: { id: notificationId, recipientId: user.id },
+    data: { read: true },
+  });
+  revalidatePath("/notifications");
+}
+
+export async function markAllNotificationsRead() {
+  const user = await requireUser();
+  await prisma.notification.updateMany({
+    where: { recipientId: user.id, read: false },
+    data: { read: true },
+  });
+  revalidatePath("/notifications");
 }
 
 // ---------- Employee management (OWNER only) ----------
