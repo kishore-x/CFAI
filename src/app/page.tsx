@@ -392,14 +392,12 @@ function TeamWorkload({ developers, tasks }: { developers: { id: string; name: s
         const mine = tasks.filter((t) => t.assignedToId === d.id);
         const { activeCount, level } = getDeveloperWorkload(mine);
         return (
-          <li key={d.id} className="flex items-center justify-between text-sm">
-            <Link href={`/employees/${d.id}`} className="hover:underline">
+          <li key={d.id} className="grid grid-cols-[1fr_5rem_6rem] items-center gap-3 text-sm">
+            <Link href={`/employees/${d.id}`} className="hover:underline truncate">
               {d.name}
             </Link>
-            <span className="flex items-center gap-2">
-              <span className="text-xs text-[var(--muted)]">{activeCount} active</span>
-              <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${WORKLOAD_STYLE[level]}`}>{level}</span>
-            </span>
+            <span className="text-xs text-[var(--muted)] text-right whitespace-nowrap">{activeCount} active</span>
+            <span className={`text-[11px] py-0.5 rounded-full font-medium text-center min-w-[92px] inline-block ${WORKLOAD_STYLE[level]}`}>{level}</span>
           </li>
         );
       })}
@@ -473,15 +471,15 @@ function DeveloperProgressTable({
 }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-left">
+      <table className="w-full text-left border-separate border-spacing-0">
         <thead>
           <tr className="text-xs uppercase tracking-wide text-[var(--muted)]">
-            <th className="pb-2 font-medium">Developer</th>
-            <th className="pb-2 font-medium text-right">Assigned</th>
-            <th className="pb-2 font-medium text-right">Completed</th>
-            <th className="pb-2 font-medium text-right">In progress</th>
-            <th className="pb-2 font-medium text-right">Blocked</th>
-            <th className="pb-2 font-medium">Progress</th>
+            <th className="py-2 pr-3 font-medium whitespace-nowrap">Developer</th>
+            <th className="py-2 pr-3 font-medium whitespace-nowrap text-right">Assigned</th>
+            <th className="py-2 pr-3 font-medium whitespace-nowrap text-right">Completed</th>
+            <th className="py-2 pr-3 font-medium whitespace-nowrap text-right">In Progress</th>
+            <th className="py-2 pr-3 font-medium whitespace-nowrap text-right">Blocked</th>
+            <th className="py-2 pr-3 font-medium whitespace-nowrap">Progress</th>
           </tr>
         </thead>
         <tbody>
@@ -493,17 +491,17 @@ function DeveloperProgressTable({
             const progress = mine.length > 0 ? Math.round((completed / mine.length) * 100) : 0;
             return (
               <tr key={d.id} className="border-t border-[var(--border)]">
-                <td className="py-2.5 pr-4 text-sm">
+                <td className="py-2.5 pr-3 text-sm truncate">
                   <Link href={`/employees/${d.id}`} className="hover:underline">
                     {d.name}
                   </Link>
                 </td>
-                <td className="py-2.5 pr-4 text-sm text-right">{mine.length}</td>
-                <td className="py-2.5 pr-4 text-sm text-right">{completed}</td>
-                <td className="py-2.5 pr-4 text-sm text-right">{inProgress}</td>
-                <td className="py-2.5 pr-4 text-sm text-right">{blocked}</td>
-                <td className="py-2.5 pr-4 w-40">
-                  <div className="flex items-center gap-2">
+                <td className="py-2.5 pr-3 text-sm text-right">{mine.length}</td>
+                <td className="py-2.5 pr-3 text-sm text-right">{completed}</td>
+                <td className="py-2.5 pr-3 text-sm text-right">{inProgress}</td>
+                <td className="py-2.5 pr-3 text-sm text-right">{blocked}</td>
+                <td className="py-2.5 pr-3">
+                  <div className="flex items-center gap-2 w-24">
                     <div className="h-1.5 flex-1 rounded-full bg-white/10 overflow-hidden">
                       <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${progress}%` }} />
                     </div>
