@@ -567,6 +567,7 @@ const ACTION_LABEL: Record<string, string> = {
   PROJECT_MEMBER_REMOVED: "removed a member from",
   PROJECT_DEV_RESOURCES_UPDATED: "updated development resources for",
   PROJECT_DOCUMENT_ADDED: "added a document/meeting link to",
+  PROJECT_DEADLINE_CHANGED: "updated the deadline for",
   TASK_CREATED: "created a task in",
   TASK_ASSIGNED: "reassigned a task in",
   TASK_STATUS_CHANGED: "updated a task in",

@@ -69,7 +69,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           {project.description && <div className="text-sm text-[var(--muted)] mt-2 max-w-xl">{project.description}</div>}
           {project.manager && <div className="text-xs text-[var(--muted)] mt-2">Managed by {project.manager.name}</div>}
         </div>
-        {canManage && <ProjectStatusControl projectId={project.id} status={project.status} progressOverride={project.progressOverride} />}
+        {canManage && <ProjectStatusControl projectId={project.id} status={project.status} progressOverride={project.progressOverride} deadline={project.deadline} />}
       </div>
 
       <Card className="p-5">

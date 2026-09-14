@@ -264,6 +264,18 @@ export async function updateProjectProgressOverride(projectId: string, progress:
   revalidatePath("/");
 }
 
+export async function updateProjectDeadline(projectId: string, deadline: string | null) {
+  const user = await requireUser();
+  await assertCanManageProject(user, projectId);
+  const parsed = deadline ? new Date(deadline) : null;
+  if (parsed && Number.isNaN(parsed.getTime())) throw new Error("Invalid deadline date");
+  await prisma.project.update({ where: { id: projectId }, data: { deadline: parsed } });
+  await logActivity({ actorId: user.id, action: "PROJECT_DEADLINE_CHANGED", entityType: "Project", entityId: projectId, metadata: { deadline } });
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/projects");
+  revalidatePath("/");
+}
+
 export async function addProjectMember(projectId: string, employeeId: string, role: string) {
   const user = await requireUser();
   await assertCanManageProject(user, projectId);
