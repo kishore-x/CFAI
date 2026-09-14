@@ -25,13 +25,13 @@ export function TaskViewToggle({ tasks, companyWide, currentUserId }: { tasks: T
       <div className="flex justify-end gap-1">
         <button
           onClick={() => setView("list")}
-          className={`text-xs font-medium px-2.5 py-1 rounded-md ${view === "list" ? "bg-white/10 text-[var(--foreground)]" : "text-[var(--muted)] hover:bg-white/5"}`}
+          className={`text-xs font-medium px-2.5 py-1 rounded-md ${view === "list" ? "bg-[var(--overlay-10)] text-[var(--foreground)]" : "text-[var(--muted)] hover:bg-[var(--overlay-5)]"}`}
         >
           List
         </button>
         <button
           onClick={() => setView("board")}
-          className={`text-xs font-medium px-2.5 py-1 rounded-md ${view === "board" ? "bg-white/10 text-[var(--foreground)]" : "text-[var(--muted)] hover:bg-white/5"}`}
+          className={`text-xs font-medium px-2.5 py-1 rounded-md ${view === "board" ? "bg-[var(--overlay-10)] text-[var(--foreground)]" : "text-[var(--muted)] hover:bg-[var(--overlay-5)]"}`}
         >
           Board
         </button>

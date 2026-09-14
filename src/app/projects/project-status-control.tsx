@@ -43,7 +43,7 @@ export function ProjectStatusControl({
             const v = e.target.value === "" ? null : Number(e.target.value);
             startTransition(() => updateProjectProgressOverride(projectId, v));
           }}
-          className="w-16 rounded-md border border-[var(--border)] bg-transparent px-2 py-1 text-xs outline-none focus:border-white/60"
+          className="w-16 rounded-md border border-[var(--border)] bg-transparent px-2 py-1 text-xs outline-none focus:border-[var(--border-60)]"
         />
       </label>
     </div>

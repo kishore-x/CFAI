@@ -18,7 +18,7 @@ export function NotificationRow({
 
   return (
     <div
-      className={`flex items-start justify-between gap-3 px-4 py-3 border-b border-[var(--border)] last:border-none ${!read ? "bg-white/5" : ""}`}
+      className={`flex items-start justify-between gap-3 px-4 py-3 border-b border-[var(--border)] last:border-none ${!read ? "bg-[var(--overlay-5)]" : ""}`}
     >
       <div className="flex items-start gap-2">
         {!read && <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[var(--accent)] shrink-0" />}

@@ -46,7 +46,7 @@ export default async function MessagesPage() {
             <Link
               key={c.id}
               href={`/messages/${c.id}`}
-              className={`flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] last:border-none hover:bg-white/5 transition-colors ${unread ? "bg-white/5" : ""}`}
+              className={`flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] last:border-none hover:bg-[var(--overlay-5)] transition-colors ${unread ? "bg-[var(--overlay-5)]" : ""}`}
             >
               <Avatar name={other.name} />
               <div className="flex-1 min-w-0">

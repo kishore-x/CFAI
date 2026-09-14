@@ -73,7 +73,7 @@ export function AttendanceRow({ row, editable, showProject }: { row: Row; editab
             <button
               disabled={disabled}
               onClick={() => run(() => clockIn(row.employeeId))}
-              className="text-xs font-medium px-2.5 py-1 rounded-md bg-[var(--accent)] text-black disabled:opacity-50"
+              className="text-xs font-medium px-2.5 py-1 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50"
             >
               Clock in
             </button>

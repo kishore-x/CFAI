@@ -67,7 +67,7 @@ export function TaskBoard({ tasks, editable }: { tasks: Task[]; editable: boolea
                     key={t.id}
                     draggable={editable}
                     onDragStart={() => setDragId(t.id)}
-                    className={`rounded-md bg-white/5 p-2.5 text-xs ${editable ? "cursor-grab active:cursor-grabbing" : ""} ${isPending ? "opacity-70" : ""}`}
+                    className={`rounded-md bg-[var(--overlay-5)] p-2.5 text-xs ${editable ? "cursor-grab active:cursor-grabbing" : ""} ${isPending ? "opacity-70" : ""}`}
                   >
                     <Link href={`/tasks/${t.id}`} className="font-medium text-[var(--foreground)] mb-1 block hover:underline">
                       {t.title}

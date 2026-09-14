@@ -64,7 +64,7 @@ export default function ChangePasswordPage() {
               required
               value={current}
               onChange={(e) => setCurrent(e.target.value)}
-              className="w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60"
+              className="w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]"
             />
           </div>
           <div>
@@ -75,7 +75,7 @@ export default function ChangePasswordPage() {
               minLength={8}
               value={next}
               onChange={(e) => setNext(e.target.value)}
-              className="w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60"
+              className="w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]"
             />
           </div>
           <div>
@@ -86,7 +86,7 @@ export default function ChangePasswordPage() {
               minLength={8}
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              className="w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60"
+              className="w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]"
             />
           </div>
 
@@ -95,7 +95,7 @@ export default function ChangePasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-[var(--accent)] text-black font-medium text-sm py-2 disabled:opacity-50"
+            className="w-full rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] font-medium text-sm py-2 disabled:opacity-50"
           >
             {loading ? "Saving…" : "Save password"}
           </button>

@@ -45,9 +45,9 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
             const mine = m.senderId === user.id;
             return (
               <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[70%] rounded-lg px-3 py-2 text-sm ${mine ? "bg-[var(--accent)] text-black" : "bg-white/10"}`}>
+                <div className={`max-w-[70%] rounded-lg px-3 py-2 text-sm ${mine ? "bg-[var(--accent)] text-[var(--accent-foreground)]" : "bg-[var(--overlay-10)]"}`}>
                   <div>{m.content}</div>
-                  <div className={`text-[10px] mt-1 ${mine ? "text-black/60" : "text-[var(--muted)]"}`}>
+                  <div className={`text-[10px] mt-1 ${mine ? "text-[var(--accent-foreground)]/60" : "text-[var(--muted)]"}`}>
                     {new Date(m.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
                   </div>
                 </div>

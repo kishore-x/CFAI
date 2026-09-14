@@ -11,7 +11,7 @@ export function LeaveReviewRow({ leaveId }: { leaveId: string }) {
       <button
         disabled={isPending}
         onClick={() => startTransition(() => reviewLeaveRequest(leaveId, "APPROVED"))}
-        className="text-xs font-medium px-2.5 py-1 rounded-md bg-[var(--accent)] text-black disabled:opacity-50"
+        className="text-xs font-medium px-2.5 py-1 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50"
       >
         Approve
       </button>

@@ -41,7 +41,7 @@ export function MemberList({
   return (
     <div className="mt-4 flex flex-wrap items-center gap-3">
       {members.map((m) => (
-        <div key={m.id} className="flex items-center gap-2 rounded-md bg-white/5 pl-1.5 pr-2 py-1.5">
+        <div key={m.id} className="flex items-center gap-2 rounded-md bg-[var(--overlay-5)] pl-1.5 pr-2 py-1.5">
           <Avatar name={m.name} />
           <div className="text-xs">
             <div className="font-medium">{m.name}</div>
@@ -83,7 +83,7 @@ export function MemberList({
               </option>
             ))}
           </select>
-          <button type="submit" disabled={isPending} className="text-xs font-medium px-2.5 py-1.5 rounded-md bg-[var(--accent)] text-black disabled:opacity-50">
+          <button type="submit" disabled={isPending} className="text-xs font-medium px-2.5 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50">
             Add
           </button>
           <button type="button" onClick={() => setShowForm(false)} className="text-xs text-[var(--muted)]">

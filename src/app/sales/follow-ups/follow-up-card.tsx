@@ -47,7 +47,7 @@ export function FollowUpCard({ item, showRep, canEdit }: { item: FollowUpItem; s
         canEdit && (
           <>
             {!showComplete ? (
-              <button onClick={() => setShowComplete(true)} className="text-xs font-medium px-2.5 py-1 rounded-md border border-[var(--border)] hover:bg-white/10">
+              <button onClick={() => setShowComplete(true)} className="text-xs font-medium px-2.5 py-1 rounded-md border border-[var(--border)] hover:bg-[var(--overlay-10)]">
                 Mark completed
               </button>
             ) : (
@@ -57,14 +57,14 @@ export function FollowUpCard({ item, showRep, canEdit }: { item: FollowUpItem; s
                   onChange={(e) => setOutcome(e.target.value)}
                   placeholder="Outcome…"
                   required
-                  className="w-full text-xs rounded-md border border-[var(--border)] bg-transparent px-2 py-1.5 outline-none focus:border-white/60"
+                  className="w-full text-xs rounded-md border border-[var(--border)] bg-transparent px-2 py-1.5 outline-none focus:border-[var(--border-60)]"
                 />
                 <label className="flex items-center gap-2 text-xs text-[var(--muted)]">
                   Next follow-up (optional)
                   <input type="datetime-local" value={nextDate} onChange={(e) => setNextDate(e.target.value)} className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-xs" />
                 </label>
                 <div className="flex items-center gap-2">
-                  <button type="submit" disabled={isPending} className="text-xs font-medium px-2.5 py-1 rounded-md bg-[var(--accent)] text-black disabled:opacity-50">
+                  <button type="submit" disabled={isPending} className="text-xs font-medium px-2.5 py-1 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50">
                     {isPending ? "Saving…" : "Save"}
                   </button>
                   <button type="button" onClick={() => setShowComplete(false)} className="text-xs text-[var(--muted)]">

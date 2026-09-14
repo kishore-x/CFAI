@@ -40,7 +40,7 @@ export function LeavePolicyManager({ policies }: { policies: Policy[] }) {
     <div className="space-y-3">
       <div className="space-y-2">
         {policies.map((p) => (
-          <div key={p.id} className="flex items-center justify-between rounded-md bg-white/5 px-3 py-2 text-sm">
+          <div key={p.id} className="flex items-center justify-between rounded-md bg-[var(--overlay-5)] px-3 py-2 text-sm">
             <div>
               <span className="font-medium">{p.name}</span>{" "}
               <span className="text-[var(--muted)]">
@@ -64,7 +64,7 @@ export function LeavePolicyManager({ policies }: { policies: Policy[] }) {
           + Add leave type
         </button>
       ) : (
-        <form id="leave-policy-form" onSubmit={handleSubmit} className="grid sm:grid-cols-2 gap-2 bg-white/5 rounded-md p-3">
+        <form id="leave-policy-form" onSubmit={handleSubmit} className="grid sm:grid-cols-2 gap-2 bg-[var(--overlay-5)] rounded-md p-3">
           <input name="name" required placeholder="Leave type name" className="rounded-md border border-[var(--border)] bg-transparent px-2 py-1.5 text-sm" />
           <select name="period" className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-sm">
             <option value="ANNUAL">Annual</option>
@@ -76,7 +76,7 @@ export function LeavePolicyManager({ policies }: { policies: Policy[] }) {
             <input type="checkbox" name="carryForward" /> Allow carry forward
           </label>
           <div className="sm:col-span-2 flex items-center gap-2">
-            <button type="submit" disabled={isPending} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-black disabled:opacity-50">
+            <button type="submit" disabled={isPending} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50">
               Save
             </button>
             <button type="button" onClick={() => setShowForm(false)} className="text-xs text-[var(--muted)]">

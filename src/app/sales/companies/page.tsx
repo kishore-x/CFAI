@@ -36,7 +36,7 @@ export default async function CompaniesPage() {
           const activeValue = c.opportunities.filter((o) => o.stage !== "WON" && o.stage !== "LOST").reduce((s, o) => s + o.estimatedValue, 0);
           return (
             <Link key={c.id} href={`/sales/companies/${c.id}`}>
-              <Card className="p-5 h-full hover:border-white/30 transition-colors">
+              <Card className="p-5 h-full hover:border-[var(--border-30)] transition-colors">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h2 className="font-semibold">{c.name}</h2>

@@ -23,9 +23,9 @@ export function AddActivityForm() {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Log an activity or note…"
-        className="flex-1 text-sm rounded-md border border-[var(--border)] bg-transparent px-3 py-2 outline-none focus:border-white/60"
+        className="flex-1 text-sm rounded-md border border-[var(--border)] bg-transparent px-3 py-2 outline-none focus:border-[var(--border-60)]"
       />
-      <button type="submit" disabled={isPending || !text.trim()} className="text-xs font-medium px-3 py-2 rounded-md bg-[var(--accent)] text-black disabled:opacity-50">
+      <button type="submit" disabled={isPending || !text.trim()} className="text-xs font-medium px-3 py-2 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50">
         Add
       </button>
     </form>

@@ -51,7 +51,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
           <p className="text-sm text-[var(--muted)] mt-1">{leads.length} leads</p>
         </div>
         <div className="flex items-center gap-2">
-          <a href={exportHref} className="text-xs font-medium px-3 py-1.5 rounded-md border border-[var(--border)] hover:bg-white/10">
+          <a href={exportHref} className="text-xs font-medium px-3 py-1.5 rounded-md border border-[var(--border)] hover:bg-[var(--overlay-10)]">
             Export to Excel
           </a>
           <LeadForm reps={reps} />
@@ -60,7 +60,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
 
       <Card className="p-3">
         <form className="flex flex-wrap items-center gap-2 text-xs">
-          <input name="q" defaultValue={q ?? ""} placeholder="Search company / contact" className="rounded-md border border-[var(--border)] bg-transparent px-2.5 py-1.5 outline-none focus:border-white/60" />
+          <input name="q" defaultValue={q ?? ""} placeholder="Search company / contact" className="rounded-md border border-[var(--border)] bg-transparent px-2.5 py-1.5 outline-none focus:border-[var(--border-60)]" />
           <select name="status" defaultValue={status ?? ""} className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5">
             <option value="">All statuses</option>
             {STAGES.map((s) => (
@@ -77,7 +77,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
               </option>
             ))}
           </select>
-          <button type="submit" className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-[var(--border)] hover:bg-white/10">
+          <button type="submit" className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-[var(--border)] hover:bg-[var(--overlay-10)]">
             Filter
           </button>
           {(status || source || q) && (

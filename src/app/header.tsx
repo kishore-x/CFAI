@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { ThemeToggle } from "./theme-toggle";
 
 const NAV_BY_ROLE: Record<string, { href: string; label: string }[]> = {
   OWNER: [
@@ -85,7 +86,7 @@ export function Header({
     <header className="border-b border-[var(--border)] bg-[var(--surface)] sticky top-0 z-10">
       <div className="mx-auto max-w-6xl px-6 py-3 flex flex-wrap items-center justify-between gap-y-2 gap-x-3">
         <div className="flex items-center gap-2 shrink-0">
-          <div className="h-8 w-8 rounded-lg bg-[var(--accent)] flex items-center justify-center text-black font-bold text-sm shrink-0">
+          <div className="h-8 w-8 rounded-lg bg-[var(--accent)] flex items-center justify-center text-[var(--accent-foreground)] font-bold text-sm shrink-0">
             CF
           </div>
           <span className="font-semibold tracking-tight hidden sm:inline">ClickfieldAI Hub</span>
@@ -100,13 +101,13 @@ export function Header({
                 href={item.href}
                 className={`px-1.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
                   pathname === item.href
-                    ? "text-[var(--foreground)] bg-white/10"
-                    : "text-[var(--muted)] hover:bg-white/10 hover:text-[var(--foreground)]"
+                    ? "text-[var(--foreground)] bg-[var(--overlay-10)]"
+                    : "text-[var(--muted)] hover:bg-[var(--overlay-10)] hover:text-[var(--foreground)]"
                 }`}
               >
                 {item.label}
                 {badgeCount > 0 && (
-                  <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-[var(--accent)] text-black text-[10px] font-bold">
+                  <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-[var(--accent)] text-[var(--accent-foreground)] text-[10px] font-bold">
                     {badgeCount > 9 ? "9+" : badgeCount}
                   </span>
                 )}
@@ -120,9 +121,10 @@ export function Header({
             <div className="text-xs font-medium">{name}</div>
             <div className="text-[10px] text-[var(--muted)]">{ROLE_LABEL[role] ?? role}</div>
           </div>
+          <ThemeToggle />
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="text-xs font-medium px-2.5 py-1 rounded-md border border-[var(--border)] hover:bg-white/10 whitespace-nowrap shrink-0"
+            className="text-xs font-medium px-2.5 py-1 rounded-md border border-[var(--border)] hover:bg-[var(--overlay-10)] whitespace-nowrap shrink-0"
           >
             Sign out
           </button>

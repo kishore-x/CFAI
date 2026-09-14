@@ -293,7 +293,7 @@ function PageHeader({ title }: { title: string }) {
 
 function TaskStatTile({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-md bg-white/5 px-3 py-2">
+    <div className="rounded-md bg-[var(--overlay-5)] px-3 py-2">
       <div className="text-[var(--muted)] text-xs">{label}</div>
       <div className="text-lg font-semibold">{value}</div>
     </div>
@@ -385,7 +385,7 @@ function NeedsAttention({
 function TeamWorkload({ developers, tasks }: { developers: { id: string; name: string }[]; tasks: { assignedToId: string | null; status: string; priority: string }[] }) {
   const WORKLOAD_STYLE: Record<string, string> = {
     LOW: "border border-[var(--border)] text-[var(--muted)]",
-    NORMAL: "border border-white/40 text-[var(--foreground)]",
+    NORMAL: "border border-[var(--border-40)] text-[var(--foreground)]",
     HIGH: "bg-gray-400 text-black",
     OVERLOADED: "bg-white text-black",
   };
@@ -505,7 +505,7 @@ function DeveloperProgressTable({
                 <td className="py-2.5 pr-3 text-sm text-right">{blocked}</td>
                 <td className="py-2.5 pr-3">
                   <div className="flex items-center gap-2 w-24">
-                    <div className="h-1.5 flex-1 rounded-full bg-white/10 overflow-hidden">
+                    <div className="h-1.5 flex-1 rounded-full bg-[var(--overlay-10)] overflow-hidden">
                       <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${progress}%` }} />
                     </div>
                     <span className="text-xs text-[var(--muted)] w-9 text-right">{progress}%</span>
@@ -542,7 +542,7 @@ function ProjectProgressRow({
         <span className="text-sm font-medium truncate">{p.name}</span>
         <ProjectStatusBadge status={p.status} />
       </div>
-      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+      <div className="h-1.5 rounded-full bg-[var(--overlay-10)] overflow-hidden">
         <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${progress}%` }} />
       </div>
       <div className="mt-1 flex items-center justify-between text-xs text-[var(--muted)]">

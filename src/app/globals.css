@@ -7,6 +7,33 @@
   --muted: #9a9a9a;
   --border: #2e2e2e;
   --accent: #ffffff;
+  --accent-foreground: #000000;
+  --overlay-5: rgba(255, 255, 255, 0.05);
+  --overlay-10: rgba(255, 255, 255, 0.1);
+  --border-30: rgba(255, 255, 255, 0.3);
+  --border-40: rgba(255, 255, 255, 0.4);
+  --border-50: rgba(255, 255, 255, 0.5);
+  --border-60: rgba(255, 255, 255, 0.6);
+}
+
+/* Light mode is opt-in via the toggle in the header, which sets this
+   attribute on <html> and persists the choice to localStorage — every
+   color in the app is a variable, so this is the single source of truth
+   for both themes (no separate light-mode classes anywhere else). */
+[data-theme="light"] {
+  --background: #ffffff;
+  --surface: #f6f6f6;
+  --foreground: #0a0a0a;
+  --muted: #666666;
+  --border: #e2e2e2;
+  --accent: #000000;
+  --accent-foreground: #ffffff;
+  --overlay-5: rgba(0, 0, 0, 0.04);
+  --overlay-10: rgba(0, 0, 0, 0.07);
+  --border-30: rgba(0, 0, 0, 0.15);
+  --border-40: rgba(0, 0, 0, 0.2);
+  --border-50: rgba(0, 0, 0, 0.3);
+  --border-60: rgba(0, 0, 0, 0.4);
 }
 
 @theme inline {
@@ -29,4 +56,14 @@ body {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+.theme-icon-light {
+  display: none;
+}
+[data-theme="light"] .theme-icon-dark {
+  display: none;
+}
+[data-theme="light"] .theme-icon-light {
+  display: inline;
 }

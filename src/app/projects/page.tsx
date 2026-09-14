@@ -55,7 +55,7 @@ export default async function ProjectsPage() {
 
           return (
             <Link key={p.id} href={`/projects/${p.id}`}>
-              <Card className="p-5 h-full hover:border-white/30 transition-colors">
+              <Card className="p-5 h-full hover:border-[var(--border-30)] transition-colors">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
@@ -68,14 +68,14 @@ export default async function ProjectsPage() {
                   <span className="text-sm text-[var(--muted)] shrink-0">{progress}%</span>
                 </div>
 
-                <div className="mt-4 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div className="mt-4 h-1.5 rounded-full bg-[var(--overlay-10)] overflow-hidden">
                   <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${progress}%` }} />
                 </div>
 
                 <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-[var(--muted)]">
                   <span>{done}/{p.tasks.length} tasks done</span>
                   <span>{p.assignments.length} on team</span>
-                  {blocked > 0 && <span className="text-white">{blocked} blocked</span>}
+                  {blocked > 0 && <span className="text-[var(--foreground)]">{blocked} blocked</span>}
                   {overdue > 0 && <span className="text-red-400">{overdue} overdue</span>}
                   {p.deadline && <span>Due {new Date(p.deadline).toLocaleDateString("en-GB")}</span>}
                 </div>

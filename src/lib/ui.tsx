@@ -21,7 +21,7 @@ const PROJECT_STATUS_STYLES: Record<string, string> = {
   ACTIVE: "bg-gray-700 text-white",
   ON_HOLD: "border border-dashed border-[var(--border)] text-[var(--muted)] line-through",
   COMPLETED: "bg-white text-black",
-  CANCELLED: "border border-dashed border-white/40 text-[var(--muted)] line-through",
+  CANCELLED: "border border-dashed border-[var(--border-40)] text-[var(--muted)] line-through",
 };
 
 export function ProjectStatusBadge({ status }: { status: string }) {
@@ -48,13 +48,13 @@ export function DevResourceStatusBadge({ status }: { status: string }) {
 
 const SALES_STAGE_STYLES: Record<string, string> = {
   NEW: "border border-[var(--border)] text-[var(--muted)]",
-  CONTACTED: "border border-white/40 text-[var(--foreground)]",
+  CONTACTED: "border border-[var(--border-40)] text-[var(--foreground)]",
   QUALIFIED: "bg-gray-700 text-white",
   MEETING: "bg-gray-700 text-white",
   PROPOSAL: "bg-gray-400 text-black",
   NEGOTIATION: "bg-gray-400 text-black",
   WON: "bg-white text-black",
-  LOST: "border border-dashed border-white/40 text-[var(--muted)] line-through",
+  LOST: "border border-dashed border-[var(--border-40)] text-[var(--muted)] line-through",
 };
 
 export function SalesStageBadge({ status }: { status: string }) {
@@ -67,11 +67,11 @@ export function SalesStageBadge({ status }: { status: string }) {
 
 const PROPOSAL_STATUS_STYLES: Record<string, string> = {
   DRAFT: "border border-[var(--border)] text-[var(--muted)]",
-  SENT: "border border-white/40 text-[var(--foreground)]",
+  SENT: "border border-[var(--border-40)] text-[var(--foreground)]",
   VIEWED: "bg-gray-700 text-white",
   NEGOTIATION: "bg-gray-400 text-black",
   ACCEPTED: "bg-white text-black",
-  REJECTED: "border border-dashed border-white/40 text-[var(--muted)] line-through",
+  REJECTED: "border border-dashed border-[var(--border-40)] text-[var(--muted)] line-through",
 };
 
 export function ProposalStatusBadge({ status }: { status: string }) {
@@ -85,7 +85,7 @@ export function ProposalStatusBadge({ status }: { status: string }) {
 const TASK_STATUS_STYLES: Record<string, string> = {
   TODO: "border border-[var(--border)] text-[var(--muted)]",
   IN_PROGRESS: "bg-gray-700 text-white",
-  BLOCKED: "border border-white/50 text-white",
+  BLOCKED: "border border-[var(--border-50)] text-[var(--foreground)]",
   IN_REVIEW: "bg-gray-400 text-black",
   COMPLETED: "bg-white text-black",
 };
@@ -101,8 +101,8 @@ export function TaskStatusBadge({ status }: { status: string }) {
 const TASK_PRIORITY_STYLES: Record<string, string> = {
   LOW: "text-[var(--muted)]",
   MEDIUM: "text-[var(--foreground)]",
-  HIGH: "text-white font-semibold",
-  URGENT: "text-white font-semibold underline decoration-white/60",
+  HIGH: "text-[var(--foreground)] font-semibold",
+  URGENT: "text-[var(--foreground)] font-semibold underline decoration-[var(--border-60)]",
 };
 
 export function TaskPriorityLabel({ priority }: { priority: string }) {

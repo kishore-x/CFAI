@@ -33,7 +33,7 @@ function ResourceRow({ label, value, url }: { label: string; value: string; url?
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 text-xs font-medium px-2.5 py-1.5 rounded-md border border-[var(--border)] hover:bg-white/10 whitespace-nowrap"
+          className="shrink-0 text-xs font-medium px-2.5 py-1.5 rounded-md border border-[var(--border)] hover:bg-[var(--overlay-10)] whitespace-nowrap"
         >
           Open ↗
         </a>
@@ -129,7 +129,7 @@ export function DevResourcesCard({
               name="githubRepoUrl"
               defaultValue={resources.githubRepoUrl ?? ""}
               placeholder="https://github.com/org/repo"
-              className="mt-1 w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60"
+              className="mt-1 w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]"
             />
           </label>
           <label className="text-xs text-[var(--muted)]">
@@ -138,7 +138,7 @@ export function DevResourcesCard({
               name="vercelProjectUrl"
               defaultValue={resources.vercelProjectUrl ?? ""}
               placeholder="https://project.vercel.app"
-              className="mt-1 w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60"
+              className="mt-1 w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]"
             />
           </label>
           <label className="text-xs text-[var(--muted)]">
@@ -147,7 +147,7 @@ export function DevResourcesCard({
               name="claudeAccountName"
               defaultValue={resources.claudeAccountName ?? ""}
               placeholder="ClickfieldAI — Ananya"
-              className="mt-1 w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60"
+              className="mt-1 w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]"
             />
           </label>
           <label className="text-xs text-[var(--muted)]">
@@ -156,7 +156,7 @@ export function DevResourcesCard({
               name="productionUrl"
               defaultValue={resources.productionUrl ?? ""}
               placeholder="https://app.client.com"
-              className="mt-1 w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60"
+              className="mt-1 w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]"
             />
           </label>
           <label className="text-xs text-[var(--muted)]">
@@ -165,7 +165,7 @@ export function DevResourcesCard({
               name="stagingUrl"
               defaultValue={resources.stagingUrl ?? ""}
               placeholder="https://staging-client.vercel.app"
-              className="mt-1 w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60"
+              className="mt-1 w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]"
             />
           </label>
           <label className="text-xs text-[var(--muted)]">
@@ -174,7 +174,7 @@ export function DevResourcesCard({
               name="developmentBranch"
               defaultValue={resources.developmentBranch ?? ""}
               placeholder="main"
-              className="mt-1 w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60"
+              className="mt-1 w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]"
             />
           </label>
           <label className="text-xs text-[var(--muted)]">
@@ -182,7 +182,7 @@ export function DevResourcesCard({
             <select
               name="devResourceStatus"
               defaultValue={resources.devResourceStatus ?? ""}
-              className="mt-1 w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm outline-none focus:border-white/60"
+              className="mt-1 w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]"
             >
               <option value="">Not set</option>
               {DEV_STATUSES.map((s) => (
@@ -198,14 +198,14 @@ export function DevResourcesCard({
               name="techStack"
               defaultValue={resources.techStack ?? ""}
               placeholder="Next.js, TypeScript, PostgreSQL, Prisma"
-              className="mt-1 w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60"
+              className="mt-1 w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]"
             />
           </label>
 
           {error && <p className="sm:col-span-2 text-xs text-red-400">{error}</p>}
 
           <div className="sm:col-span-2 flex items-center gap-3">
-            <button type="submit" disabled={isPending} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-black disabled:opacity-50">
+            <button type="submit" disabled={isPending} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50">
               {isPending ? "Saving…" : "Save"}
             </button>
             <button

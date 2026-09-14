@@ -51,15 +51,15 @@ export default async function EmployeesPage() {
               <div className="text-xs text-[var(--muted)] mt-1">{e.email}</div>
               <div className="text-xs text-[var(--muted)] mt-1">{e.role}</div>
               <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                <div className="rounded-md bg-white/5 px-2 py-1.5">
+                <div className="rounded-md bg-[var(--overlay-5)] px-2 py-1.5">
                   <div className="text-[var(--muted)]">GitHub</div>
                   <div className="font-medium truncate">{e.githubUsername ?? "—"}</div>
                 </div>
-                <div className="rounded-md bg-white/5 px-2 py-1.5">
+                <div className="rounded-md bg-[var(--overlay-5)] px-2 py-1.5">
                   <div className="text-[var(--muted)]">Vercel</div>
                   <div className="font-medium truncate">{e.vercelUsername ?? "—"}</div>
                 </div>
-                <div className="rounded-md bg-white/5 px-2 py-1.5">
+                <div className="rounded-md bg-[var(--overlay-5)] px-2 py-1.5">
                   <div className="text-[var(--muted)]">Claude</div>
                   <div className="font-medium truncate">{e.claudeAccountLabel ?? "—"}</div>
                 </div>
@@ -126,7 +126,7 @@ export default async function EmployeesPage() {
                   <td className="py-2.5 pr-4 text-sm text-right">{total}</td>
                   <td className="py-2.5 pr-4 w-32">
                     <div className="flex items-center gap-2">
-                      <div className="h-1.5 flex-1 rounded-full bg-white/10 overflow-hidden">
+                      <div className="h-1.5 flex-1 rounded-full bg-[var(--overlay-10)] overflow-hidden">
                         <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${progress}%` }} />
                       </div>
                       <span className="text-xs text-[var(--muted)] w-8 text-right">{progress}%</span>

@@ -65,10 +65,10 @@ export function ProjectDocumentsCard({ projectId, documents, canManage }: { proj
         <h2 className="font-semibold">Meeting notes &amp; documents</h2>
         {canManage && mode === "none" && (
           <div className="flex items-center gap-2">
-            <button onClick={() => setMode("upload")} className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-[var(--border)] hover:bg-white/10">
+            <button onClick={() => setMode("upload")} className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-[var(--border)] hover:bg-[var(--overlay-10)]">
               + Upload document
             </button>
-            <button onClick={() => setMode("link")} className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-[var(--border)] hover:bg-white/10">
+            <button onClick={() => setMode("link")} className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-[var(--border)] hover:bg-[var(--overlay-10)]">
               + Add meeting link
             </button>
           </div>
@@ -77,10 +77,10 @@ export function ProjectDocumentsCard({ projectId, documents, canManage }: { proj
 
       {mode === "upload" && (
         <form onSubmit={handleUpload} className="mb-4 space-y-2 rounded-md border border-[var(--border)] p-3">
-          <input name="title" required placeholder="Title (e.g. Client meeting notes — 14 Sept)" className="w-full rounded-md border border-[var(--border)] bg-transparent px-2.5 py-1.5 text-sm outline-none focus:border-white/60" />
+          <input name="title" required placeholder="Title (e.g. Client meeting notes — 14 Sept)" className="w-full rounded-md border border-[var(--border)] bg-transparent px-2.5 py-1.5 text-sm outline-none focus:border-[var(--border-60)]" />
           <input name="file" type="file" required className="w-full text-xs text-[var(--muted)] file:mr-3 file:rounded-md file:border file:border-[var(--border)] file:bg-transparent file:px-2.5 file:py-1.5 file:text-xs file:text-[var(--foreground)]" />
           <div className="flex items-center gap-2">
-            <button type="submit" disabled={isPending} className="text-xs font-medium px-2.5 py-1.5 rounded-md bg-[var(--accent)] text-black disabled:opacity-50">
+            <button type="submit" disabled={isPending} className="text-xs font-medium px-2.5 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50">
               {isPending ? "Uploading…" : "Upload"}
             </button>
             <button type="button" onClick={() => { setMode("none"); setError(null); }} className="text-xs text-[var(--muted)]">
@@ -92,10 +92,10 @@ export function ProjectDocumentsCard({ projectId, documents, canManage }: { proj
 
       {mode === "link" && (
         <form onSubmit={handleAddLink} className="mb-4 space-y-2 rounded-md border border-[var(--border)] p-3">
-          <input name="title" required placeholder="Title (e.g. Kickoff call recording)" className="w-full rounded-md border border-[var(--border)] bg-transparent px-2.5 py-1.5 text-sm outline-none focus:border-white/60" />
-          <input name="url" type="url" required placeholder="https://…" className="w-full rounded-md border border-[var(--border)] bg-transparent px-2.5 py-1.5 text-sm outline-none focus:border-white/60" />
+          <input name="title" required placeholder="Title (e.g. Kickoff call recording)" className="w-full rounded-md border border-[var(--border)] bg-transparent px-2.5 py-1.5 text-sm outline-none focus:border-[var(--border-60)]" />
+          <input name="url" type="url" required placeholder="https://…" className="w-full rounded-md border border-[var(--border)] bg-transparent px-2.5 py-1.5 text-sm outline-none focus:border-[var(--border-60)]" />
           <div className="flex items-center gap-2">
-            <button type="submit" disabled={isPending} className="text-xs font-medium px-2.5 py-1.5 rounded-md bg-[var(--accent)] text-black disabled:opacity-50">
+            <button type="submit" disabled={isPending} className="text-xs font-medium px-2.5 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50">
               {isPending ? "Adding…" : "Add link"}
             </button>
             <button type="button" onClick={() => { setMode("none"); setError(null); }} className="text-xs text-[var(--muted)]">
@@ -120,7 +120,7 @@ export function ProjectDocumentsCard({ projectId, documents, canManage }: { proj
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-[var(--border)] hover:bg-white/10 whitespace-nowrap">
+              <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-[var(--border)] hover:bg-[var(--overlay-10)] whitespace-nowrap">
                 Open ↗
               </a>
               {canManage && (

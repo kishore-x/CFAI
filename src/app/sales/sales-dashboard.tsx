@@ -77,7 +77,7 @@ export async function SalesRepDashboard({ userId, userName }: { userId: string; 
           <h2 className="font-semibold">Target achievement</h2>
           <span className="text-sm text-[var(--muted)]">{achievementPercent(achieved, targetAmount)}%</span>
         </div>
-        <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+        <div className="h-2 rounded-full bg-[var(--overlay-10)] overflow-hidden">
           <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${Math.min(100, achievementPercent(achieved, targetAmount))}%` }} />
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-[var(--muted)]">

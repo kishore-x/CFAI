@@ -27,7 +27,7 @@ export function TaskLifecycleActions({
       <button
         disabled={isPending}
         onClick={() => startTransition(() => reviewTask(taskId))}
-        className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-black disabled:opacity-50"
+        className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50"
       >
         Review task
       </button>
@@ -40,7 +40,7 @@ export function TaskLifecycleActions({
         <button
           disabled={isPending}
           onClick={() => startTransition(() => acceptTask(taskId))}
-          className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-black disabled:opacity-50"
+          className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50"
         >
           Accept task
         </button>
@@ -54,7 +54,7 @@ export function TaskLifecycleActions({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="What do you need clarified?"
-              className="text-xs rounded-md border border-[var(--border)] bg-transparent px-2 py-1.5 outline-none focus:border-white/60"
+              className="text-xs rounded-md border border-[var(--border)] bg-transparent px-2 py-1.5 outline-none focus:border-[var(--border-60)]"
             />
             <button
               disabled={isPending || !message.trim()}

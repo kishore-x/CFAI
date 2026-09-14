@@ -77,7 +77,7 @@ export function NotificationPreferencesForm({ initial, showSales }: { initial: N
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between rounded-md bg-white/5 px-3 py-2.5">
+      <div className="flex items-center justify-between rounded-md bg-[var(--overlay-5)] px-3 py-2.5">
         <div>
           <div className="text-sm font-medium">Email notifications</div>
           <div className="text-xs text-[var(--muted)]">Receive important updates by email.</div>
@@ -86,7 +86,7 @@ export function NotificationPreferencesForm({ initial, showSales }: { initial: N
           onClick={() => toggle("emailEnabled")}
           disabled={isPending}
           className={`text-xs font-medium px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 ${
-            prefs.emailEnabled ? "bg-[var(--accent)] text-black" : "border border-[var(--border)] text-[var(--muted)]"
+            prefs.emailEnabled ? "bg-[var(--accent)] text-[var(--accent-foreground)]" : "border border-[var(--border)] text-[var(--muted)]"
           }`}
         >
           {prefs.emailEnabled ? "ON" : "OFF"}
@@ -105,7 +105,7 @@ export function NotificationPreferencesForm({ initial, showSales }: { initial: N
                     checked={prefs[item.key]}
                     onChange={() => toggle(item.key)}
                     disabled={isPending || !prefs.emailEnabled}
-                    className="h-4 w-4 accent-white"
+                    className="h-4 w-4 accent-[var(--accent)]"
                   />
                   {item.label}
                 </label>

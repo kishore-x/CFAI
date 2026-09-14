@@ -77,7 +77,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           <h2 className="font-semibold">Progress</h2>
           <span className="text-sm text-[var(--muted)]">{progress}%</span>
         </div>
-        <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+        <div className="h-2 rounded-full bg-[var(--overlay-10)] overflow-hidden">
           <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${progress}%` }} />
         </div>
       </Card>
@@ -102,7 +102,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           <div>
             Deadline: {new Date(project.deadline).toLocaleDateString("en-GB")}
             {deadlineNote && (
-              <span className={deadlineNote.icon === "🔴" ? "text-red-400 ml-2" : deadlineNote.icon === "⚠" ? "text-white ml-2" : "ml-2"}>
+              <span className={deadlineNote.icon === "🔴" ? "text-red-400 ml-2" : deadlineNote.icon === "⚠" ? "text-[var(--foreground)] ml-2" : "ml-2"}>
                 {deadlineNote.icon} {deadlineNote.text}
               </span>
             )}

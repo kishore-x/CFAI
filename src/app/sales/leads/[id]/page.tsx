@@ -47,7 +47,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
       </Card>
 
       {lead.opportunity && (
-        <Card className="p-4 border-white/30">
+        <Card className="p-4 border-[var(--border-30)]">
           <span className="text-sm">
             Converted to opportunity: <span className="font-medium">{lead.opportunity.name}</span> (<SalesStageBadge status={lead.opportunity.stage} />)
           </span>

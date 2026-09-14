@@ -56,7 +56,7 @@ export default async function SalesOverviewPage({ searchParams }: { searchParams
               </option>
             ))}
           </select>
-          <button type="submit" className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-[var(--border)] hover:bg-white/10">
+          <button type="submit" className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-[var(--border)] hover:bg-[var(--overlay-10)]">
             Apply
           </button>
         </form>
@@ -80,7 +80,7 @@ export default async function SalesOverviewPage({ searchParams }: { searchParams
           <h2 className="font-semibold">Target vs achievement</h2>
           <span className="text-sm text-[var(--muted)]">{achievementPercent(achieved, targetTotal)}%</span>
         </div>
-        <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+        <div className="h-2 rounded-full bg-[var(--overlay-10)] overflow-hidden">
           <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${Math.min(100, achievementPercent(achieved, targetTotal))}%` }} />
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-[var(--muted)]">

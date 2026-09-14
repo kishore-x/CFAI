@@ -37,7 +37,7 @@ export function ProposalForm({ companies }: { companies: { id: string; name: str
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-black">
+      <button onClick={() => setOpen(true)} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)]">
         + New proposal
       </button>
     );
@@ -53,17 +53,17 @@ export function ProposalForm({ companies }: { companies: { id: string; name: str
           </option>
         ))}
       </select>
-      <input name="contactPerson" placeholder="Contact person" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
-      <input name="items" placeholder="Items / services" className="sm:col-span-2 rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
-      <input name="amount" type="number" min={0} required placeholder="Amount (₹)" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
-      <input name="discount" type="number" min={0} placeholder="Discount (₹)" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
+      <input name="contactPerson" placeholder="Contact person" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
+      <input name="items" placeholder="Items / services" className="sm:col-span-2 rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
+      <input name="amount" type="number" min={0} required placeholder="Amount (₹)" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
+      <input name="discount" type="number" min={0} placeholder="Discount (₹)" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
       <input name="validUntil" type="date" className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm" />
-      <input name="notes" placeholder="Notes" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
+      <input name="notes" placeholder="Notes" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
 
       {error && <p className="sm:col-span-2 text-xs text-red-400">{error}</p>}
 
       <div className="sm:col-span-2 flex items-center gap-3">
-        <button type="submit" disabled={isPending} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-black disabled:opacity-50">
+        <button type="submit" disabled={isPending} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50">
           {isPending ? "Creating…" : "Create proposal"}
         </button>
         <button type="button" onClick={() => setOpen(false)} className="text-xs text-[var(--muted)]">

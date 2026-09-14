@@ -47,7 +47,7 @@ export function AssignTaskForm({
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-black">
+      <button onClick={() => setOpen(true)} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)]">
         + Assign task
       </button>
     );
@@ -55,8 +55,8 @@ export function AssignTaskForm({
 
   return (
     <form onSubmit={handleSubmit} className="border border-[var(--border)] rounded-xl bg-[var(--surface)] p-5 grid sm:grid-cols-2 gap-3">
-      <input name="title" required placeholder="Task title" className="sm:col-span-2 rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
-      <input name="description" placeholder="Description (optional)" className="sm:col-span-2 rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
+      <input name="title" required placeholder="Task title" className="sm:col-span-2 rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
+      <input name="description" placeholder="Description (optional)" className="sm:col-span-2 rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
       <select name="projectId" required defaultValue={defaultProjectId} className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm">
         <option value="">Select project…</option>
         {projects.map((p) => (
@@ -82,7 +82,7 @@ export function AssignTaskForm({
       </select>
       <input name="dueDate" type="date" className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm" />
       <div className="sm:col-span-2 flex items-center gap-3">
-        <button type="submit" disabled={isPending} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-black disabled:opacity-50">
+        <button type="submit" disabled={isPending} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50">
           {isPending ? "Assigning…" : "Assign task"}
         </button>
         <button type="button" onClick={() => setOpen(false)} className="text-xs text-[var(--muted)]">

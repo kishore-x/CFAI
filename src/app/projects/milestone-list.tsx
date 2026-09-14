@@ -68,7 +68,7 @@ export function MilestoneList({ projectId, milestones, canManage }: { projectId:
           <form onSubmit={handleCreate} className="flex items-center gap-2 pt-2">
             <input name="name" required placeholder="Milestone name" className="flex-1 rounded-md border border-[var(--border)] bg-transparent px-2 py-1.5 text-xs" />
             <input name="dueDate" type="date" className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-xs" />
-            <button type="submit" disabled={isPending} className="text-xs font-medium px-2.5 py-1.5 rounded-md bg-[var(--accent)] text-black disabled:opacity-50">
+            <button type="submit" disabled={isPending} className="text-xs font-medium px-2.5 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50">
               Add
             </button>
             <button type="button" onClick={() => setShowForm(false)} className="text-xs text-[var(--muted)]">

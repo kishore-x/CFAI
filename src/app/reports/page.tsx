@@ -58,7 +58,7 @@ export default async function ReportsPage() {
         <h2 className="font-semibold mb-3">Projects by status</h2>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
           {Object.entries(projectsByStatus).map(([status, count]) => (
-            <div key={status} className="rounded-md bg-white/5 px-3 py-2">
+            <div key={status} className="rounded-md bg-[var(--overlay-5)] px-3 py-2">
               <div className="text-[var(--muted)] text-xs">{status.replace("_", " ")}</div>
               <div className="text-lg font-semibold">{count}</div>
             </div>

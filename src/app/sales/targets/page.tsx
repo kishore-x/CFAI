@@ -81,7 +81,7 @@ export default async function TargetsPage() {
                 <span className="text-xs text-[var(--muted)]">Achievement</span>
                 <span className="text-xs text-[var(--muted)]">{r.achievementPct}%</span>
               </div>
-              <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <div className="h-1.5 rounded-full bg-[var(--overlay-10)] overflow-hidden">
                 <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${Math.min(100, r.achievementPct)}%` }} />
               </div>
             </div>

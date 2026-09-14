@@ -18,7 +18,7 @@ export function StartChatButton({ employeeId, name, title }: { employeeId: strin
           router.push(`/messages/${id}`);
         })
       }
-      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 disabled:opacity-50 transition-colors"
+      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--overlay-5)] disabled:opacity-50 transition-colors"
     >
       <Avatar name={name} />
       <div>

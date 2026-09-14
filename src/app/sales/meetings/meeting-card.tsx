@@ -44,15 +44,15 @@ export function MeetingCard({ item, showRep }: { item: MeetingItem; showRep: boo
       {item.completedAt ? (
         <div className="text-xs text-[var(--muted)]">Outcome: {item.outcome}{item.notes ? "" : ""}</div>
       ) : !showComplete ? (
-        <button onClick={() => setShowComplete(true)} className="text-xs font-medium px-2.5 py-1 rounded-md border border-[var(--border)] hover:bg-white/10">
+        <button onClick={() => setShowComplete(true)} className="text-xs font-medium px-2.5 py-1 rounded-md border border-[var(--border)] hover:bg-[var(--overlay-10)]">
           Mark completed
         </button>
       ) : (
         <form onSubmit={handleComplete} className="space-y-2">
-          <input value={outcome} onChange={(e) => setOutcome(e.target.value)} placeholder="Outcome…" required className="w-full text-xs rounded-md border border-[var(--border)] bg-transparent px-2 py-1.5 outline-none focus:border-white/60" />
-          <input value={nextAction} onChange={(e) => setNextAction(e.target.value)} placeholder="Next action (optional)" className="w-full text-xs rounded-md border border-[var(--border)] bg-transparent px-2 py-1.5 outline-none focus:border-white/60" />
+          <input value={outcome} onChange={(e) => setOutcome(e.target.value)} placeholder="Outcome…" required className="w-full text-xs rounded-md border border-[var(--border)] bg-transparent px-2 py-1.5 outline-none focus:border-[var(--border-60)]" />
+          <input value={nextAction} onChange={(e) => setNextAction(e.target.value)} placeholder="Next action (optional)" className="w-full text-xs rounded-md border border-[var(--border)] bg-transparent px-2 py-1.5 outline-none focus:border-[var(--border-60)]" />
           <div className="flex items-center gap-2">
-            <button type="submit" disabled={isPending} className="text-xs font-medium px-2.5 py-1 rounded-md bg-[var(--accent)] text-black disabled:opacity-50">
+            <button type="submit" disabled={isPending} className="text-xs font-medium px-2.5 py-1 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50">
               {isPending ? "Saving…" : "Save"}
             </button>
             <button type="button" onClick={() => setShowComplete(false)} className="text-xs text-[var(--muted)]">

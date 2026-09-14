@@ -34,7 +34,7 @@ export function AddEmployeeForm() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-black"
+        className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)]"
       >
         Add employee
       </button>
@@ -53,7 +53,7 @@ export function AddEmployeeForm() {
       {result ? (
         <div className="text-sm space-y-2">
           <div className="text-[var(--muted)]">Created. Share this temporary password once — they&apos;ll be forced to change it on first login.</div>
-          <div className="rounded-md bg-white/5 px-3 py-2 font-mono text-xs">
+          <div className="rounded-md bg-[var(--overlay-5)] px-3 py-2 font-mono text-xs">
             {result.email} / {result.tempPassword}
           </div>
           <button
@@ -68,11 +68,11 @@ export function AddEmployeeForm() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="grid sm:grid-cols-2 gap-3">
-          <input name="name" required placeholder="Full name" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
-          <input name="email" type="email" required placeholder="Email" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
-          <input name="title" placeholder="Job title" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
-          <input name="department" placeholder="Department" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
-          <select name="role" defaultValue="DEVELOPER" className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm outline-none focus:border-white/60">
+          <input name="name" required placeholder="Full name" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
+          <input name="email" type="email" required placeholder="Email" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
+          <input name="title" placeholder="Job title" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
+          <input name="department" placeholder="Department" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
+          <select name="role" defaultValue="DEVELOPER" className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]">
             <option value="OWNER">Owner</option>
             <option value="MANAGER">Project Manager</option>
             <option value="DEVELOPER">Developer</option>
@@ -82,7 +82,7 @@ export function AddEmployeeForm() {
             <button
               type="submit"
               disabled={isPending}
-              className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-black disabled:opacity-50"
+              className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50"
             >
               {isPending ? "Creating…" : "Create"}
             </button>

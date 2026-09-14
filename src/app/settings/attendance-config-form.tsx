@@ -22,7 +22,7 @@ export function AttendanceConfigForm({ officeStartTime, graceMinutes }: { office
         Grace period (minutes)
         <input name="graceMinutes" type="number" min={0} defaultValue={graceMinutes} className="block mt-1 w-24 rounded-md border border-[var(--border)] bg-transparent px-2 py-1.5 text-sm" />
       </label>
-      <button type="submit" disabled={isPending} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-black disabled:opacity-50">
+      <button type="submit" disabled={isPending} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50">
         Save
       </button>
     </form>

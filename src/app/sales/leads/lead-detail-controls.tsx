@@ -58,15 +58,15 @@ export function LeadDetailControls({ leadId, status, canEdit }: { leadId: string
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Add a note / log an interaction…"
-          className="text-xs rounded-md border border-[var(--border)] bg-transparent px-2.5 py-1.5 outline-none focus:border-white/60 w-56"
+          className="text-xs rounded-md border border-[var(--border)] bg-transparent px-2.5 py-1.5 outline-none focus:border-[var(--border-60)] w-56"
         />
-        <button type="submit" disabled={isPending || !note.trim()} className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-[var(--border)] hover:bg-white/10 disabled:opacity-50">
+        <button type="submit" disabled={isPending || !note.trim()} className="text-xs font-medium px-2.5 py-1.5 rounded-md border border-[var(--border)] hover:bg-[var(--overlay-10)] disabled:opacity-50">
           Add
         </button>
       </form>
 
       {status !== "WON" && status !== "LOST" && !showConvert && (
-        <button onClick={() => setShowConvert(true)} className="text-xs font-medium px-2.5 py-1.5 rounded-md bg-[var(--accent)] text-black">
+        <button onClick={() => setShowConvert(true)} className="text-xs font-medium px-2.5 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)]">
           Convert to opportunity
         </button>
       )}
@@ -76,9 +76,9 @@ export function LeadDetailControls({ leadId, status, canEdit }: { leadId: string
             value={oppName}
             onChange={(e) => setOppName(e.target.value)}
             placeholder="Opportunity name (optional)"
-            className="text-xs rounded-md border border-[var(--border)] bg-transparent px-2.5 py-1.5 outline-none focus:border-white/60 w-48"
+            className="text-xs rounded-md border border-[var(--border)] bg-transparent px-2.5 py-1.5 outline-none focus:border-[var(--border-60)] w-48"
           />
-          <button disabled={isPending} onClick={handleConvert} className="text-xs font-medium px-2.5 py-1.5 rounded-md bg-[var(--accent)] text-black disabled:opacity-50">
+          <button disabled={isPending} onClick={handleConvert} className="text-xs font-medium px-2.5 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50">
             {isPending ? "Converting…" : "Confirm"}
           </button>
           <button onClick={() => setShowConvert(false)} className="text-xs text-[var(--muted)]">

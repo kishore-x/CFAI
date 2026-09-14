@@ -50,7 +50,7 @@ export function CreateProjectForm({ managers }: { managers: Candidate[] }) {
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-black">
+      <button onClick={() => setOpen(true)} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)]">
         New project
       </button>
     );
@@ -58,9 +58,9 @@ export function CreateProjectForm({ managers }: { managers: Candidate[] }) {
 
   return (
     <form onSubmit={handleSubmit} className="border border-[var(--border)] rounded-xl bg-[var(--surface)] p-5 mb-4 grid sm:grid-cols-2 gap-3">
-      <input name="name" required placeholder="Project name" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
-      <input name="client" placeholder="Client" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
-      <input name="description" placeholder="Description" className="sm:col-span-2 rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
+      <input name="name" required placeholder="Project name" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
+      <input name="client" placeholder="Client" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
+      <input name="description" placeholder="Description" className="sm:col-span-2 rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
       <input name="deadline" type="date" className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm" />
       {managers.length > 0 && (
         <select name="managerId" className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm">
@@ -76,18 +76,18 @@ export function CreateProjectForm({ managers }: { managers: Candidate[] }) {
       <div className="sm:col-span-2 mt-1 pt-3 border-t border-[var(--border)]">
         <div className="text-xs font-medium text-[var(--muted)] mb-2">Development resources (optional)</div>
         <div className="grid sm:grid-cols-2 gap-3">
-          <input name="githubRepoUrl" placeholder="GitHub repository URL" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
-          <input name="vercelProjectUrl" placeholder="Vercel URL" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
-          <input name="claudeAccountName" placeholder="Claude account / workspace" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
-          <input name="productionUrl" placeholder="Production URL" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
-          <input name="developmentBranch" placeholder="Development branch (e.g. main)" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60" />
+          <input name="githubRepoUrl" placeholder="GitHub repository URL" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
+          <input name="vercelProjectUrl" placeholder="Vercel URL" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
+          <input name="claudeAccountName" placeholder="Claude account / workspace" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
+          <input name="productionUrl" placeholder="Production URL" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
+          <input name="developmentBranch" placeholder="Development branch (e.g. main)" className="rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]" />
         </div>
       </div>
 
       {error && <p className="sm:col-span-2 text-xs text-red-400">{error}</p>}
 
       <div className="sm:col-span-2 flex items-center gap-3">
-        <button type="submit" disabled={isPending} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-black disabled:opacity-50">
+        <button type="submit" disabled={isPending} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50">
           {isPending ? "Creating…" : "Create project"}
         </button>
         <button type="button" onClick={() => setOpen(false)} className="text-xs text-[var(--muted)]">

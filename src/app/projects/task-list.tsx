@@ -68,8 +68,8 @@ export function TaskList({
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="mb-3 flex flex-wrap gap-2 items-center bg-white/5 rounded-md p-3">
-          <input name="title" required placeholder="Task title" className="flex-1 min-w-[160px] rounded-md border border-[var(--border)] bg-transparent px-2 py-1.5 text-xs outline-none focus:border-white/60" />
+        <form onSubmit={handleCreate} className="mb-3 flex flex-wrap gap-2 items-center bg-[var(--overlay-5)] rounded-md p-3">
+          <input name="title" required placeholder="Task title" className="flex-1 min-w-[160px] rounded-md border border-[var(--border)] bg-transparent px-2 py-1.5 text-xs outline-none focus:border-[var(--border-60)]" />
           <select name="assignedToId" className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-xs">
             <option value="">Unassigned</option>
             {members.map((m) => (
@@ -86,7 +86,7 @@ export function TaskList({
             ))}
           </select>
           <input name="dueDate" type="date" className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-xs" />
-          <button type="submit" disabled={isPending} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-black disabled:opacity-50">
+          <button type="submit" disabled={isPending} className="text-xs font-medium px-3 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50">
             Add
           </button>
         </form>
@@ -97,7 +97,7 @@ export function TaskList({
           const canEditStatus = canManage || t.assignedToId === currentUserId;
           const isOverdue = t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "COMPLETED";
           return (
-            <div key={t.id} className="flex items-center gap-2 text-sm rounded-md px-2 py-1.5 hover:bg-white/5">
+            <div key={t.id} className="flex items-center gap-2 text-sm rounded-md px-2 py-1.5 hover:bg-[var(--overlay-5)]">
               <div className="flex-1 min-w-0 truncate">{t.title}</div>
               <TaskPriorityLabel priority={t.priority} />
               {t.dueDate && (

@@ -29,8 +29,8 @@ export function TargetForm({ reps, year, month }: { reps: { id: string; name: st
           </option>
         ))}
       </select>
-      <input name="targetAmount" type="number" min={0} required placeholder="Target (₹)" className="text-xs rounded-md border border-[var(--border)] bg-transparent px-2.5 py-1.5 outline-none focus:border-white/60 w-36" />
-      <button type="submit" disabled={isPending} className="text-xs font-medium px-2.5 py-1.5 rounded-md bg-[var(--accent)] text-black disabled:opacity-50">
+      <input name="targetAmount" type="number" min={0} required placeholder="Target (₹)" className="text-xs rounded-md border border-[var(--border)] bg-transparent px-2.5 py-1.5 outline-none focus:border-[var(--border-60)] w-36" />
+      <button type="submit" disabled={isPending} className="text-xs font-medium px-2.5 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] disabled:opacity-50">
         {isPending ? "Saving…" : "Set target"}
       </button>
       {saved && <span className="text-xs text-[var(--muted)]">Saved.</span>}

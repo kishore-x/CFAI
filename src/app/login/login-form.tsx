@@ -56,7 +56,7 @@ function LoginForm({ roster }: { roster: RosterEntry[] }) {
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="flex items-center gap-2 justify-center mb-8">
-          <div className="h-9 w-9 rounded-lg bg-[var(--accent)] flex items-center justify-center text-black font-bold text-sm">
+          <div className="h-9 w-9 rounded-lg bg-[var(--accent)] flex items-center justify-center text-[var(--accent-foreground)] font-bold text-sm">
             CF
           </div>
           <span className="font-semibold tracking-tight text-lg">ClickfieldAI Hub</span>
@@ -74,7 +74,7 @@ function LoginForm({ roster }: { roster: RosterEntry[] }) {
               autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60"
+              className="w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]"
               placeholder="you@clickfieldai.com"
             />
           </div>
@@ -85,7 +85,7 @@ function LoginForm({ roster }: { roster: RosterEntry[] }) {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-white/60"
+              className="w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-[var(--border-60)]"
               placeholder="••••••••"
             />
           </div>
@@ -95,7 +95,7 @@ function LoginForm({ roster }: { roster: RosterEntry[] }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-[var(--accent)] text-black font-medium text-sm py-2 disabled:opacity-50"
+            className="w-full rounded-md bg-[var(--accent)] text-[var(--accent-foreground)] font-medium text-sm py-2 disabled:opacity-50"
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>
@@ -110,7 +110,7 @@ function LoginForm({ roster }: { roster: RosterEntry[] }) {
                   key={e.id}
                   disabled={isQuickLogin}
                   onClick={() => quickLogin(e.id)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-white/5 disabled:opacity-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-[var(--overlay-5)] disabled:opacity-50 transition-colors"
                 >
                   <Avatar name={e.name} />
                   <div className="min-w-0 flex-1">
