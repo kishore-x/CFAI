@@ -74,6 +74,37 @@ enum LeavePeriod {
   ANNUAL
 }
 
+// ---------- Sales CRM ----------
+// Shared by Lead and Opportunity so a lead's status and its pipeline stage
+// once converted are the same vocabulary (matches the Kanban columns).
+enum SalesStage {
+  NEW
+  CONTACTED
+  QUALIFIED
+  MEETING
+  PROPOSAL
+  NEGOTIATION
+  WON
+  LOST
+}
+
+enum FollowUpType {
+  CALL
+  WHATSAPP
+  EMAIL
+  MEETING
+  OTHER
+}
+
+enum ProposalStatus {
+  DRAFT
+  SENT
+  VIEWED
+  NEGOTIATION
+  ACCEPTED
+  REJECTED
+}
+
 // Status of the project's development environment/resources — independent
 // of the overall ProjectStatus (a project can be ON_HOLD while its repo is
 // still ACTIVE, or ACTIVE while dev work is PAUSED for the sprint, etc).
@@ -84,113 +115,132 @@ enum DevResourceStatus {
 }
 
 model Employee {
-  id            String   @id @default(cuid())
-  name          String
-  email         String   @unique
-  title         String?
-  department    String?
-  joinedAt      DateTime @default(now())
-  active        Boolean  @default(true)
-  avatarColor   String   @default("#6366f1")
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  title       String?
+  department  String?
+  joinedAt    DateTime @default(now())
+  active      Boolean  @default(true)
+  avatarColor String   @default("#6366f1")
 
-  role          Role     @default(DEVELOPER)
-  passwordHash  String
+  role               Role    @default(DEVELOPER)
+  passwordHash       String
   mustChangePassword Boolean @default(true)
 
   // Dev account references — identifiers/links only, never credentials
-  githubUsername   String?
+  githubUsername     String?
   claudeAccountLabel String?
-  vercelUsername   String?
+  vercelUsername     String?
 
-  attendance      Attendance[]
-  assignments     ProjectAssignment[]
-  leaves          LeaveRequest[]
-  reviewedLeaves  LeaveRequest[] @relation("LeaveReviewedBy")
-  managedProjects Project[]      @relation("ProjectManager")
-  createdTasks    Task[]         @relation("TaskCreatedBy")
-  assignedTasks   Task[]         @relation("TaskAssignedTo")
-  activity        ActivityLog[]
-  notifications   Notification[]
-  taskComments    TaskComment[]
-  dailyUpdates    DailyWorkUpdate[]
-  conversations   ConversationParticipant[]
-  messages        Message[]
-  reviewedLeavePolicyChanges LeavePolicy[] @relation("LeavePolicyUpdatedBy")
-  notificationPreference NotificationPreference?
+  attendance                 Attendance[]
+  assignments                ProjectAssignment[]
+  leaves                     LeaveRequest[]
+  reviewedLeaves             LeaveRequest[]            @relation("LeaveReviewedBy")
+  managedProjects            Project[]                 @relation("ProjectManager")
+  createdTasks               Task[]                    @relation("TaskCreatedBy")
+  assignedTasks              Task[]                    @relation("TaskAssignedTo")
+  activity                   ActivityLog[]
+  notifications              Notification[]
+  taskComments               TaskComment[]
+  dailyUpdates               DailyWorkUpdate[]
+  conversations              ConversationParticipant[]
+  messages                   Message[]
+  reviewedLeavePolicyChanges LeavePolicy[]             @relation("LeavePolicyUpdatedBy")
+  notificationPreference     NotificationPreference?
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  // Sales CRM — records this employee owns/is assigned (SALES_REP), or has
+  // set targets for / logged activity on (OWNER can act on anyone's).
+  salesCompanies     Company[]       @relation("SalesCompanyOwner")
+  salesLeads         Lead[]          @relation("SalesLeadOwner")
+  salesOpportunities Opportunity[]   @relation("SalesOpportunityOwner")
+  salesFollowUps     FollowUp[]      @relation("SalesFollowUpOwner")
+  salesMeetings      Meeting[]       @relation("SalesMeetingOwner")
+  salesProposals     Proposal[]      @relation("SalesProposalOwner")
+  salesActivities    SalesActivity[] @relation("SalesActivityActor")
+  salesTargets       SalesTarget[]   @relation("SalesTargetOwner")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Per-user email notification preferences. In-app notifications (Notification
 // model) always fire regardless of these — this only gates the email channel.
 // One row per employee, created lazily with defaults (all ON) on first read.
 model NotificationPreference {
-  id          String   @id @default(cuid())
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  employeeId  String   @unique
+  id         String   @id @default(cuid())
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId String   @unique
 
-  emailEnabled            Boolean @default(true)
-  taskAssigned            Boolean @default(true)
-  taskCompleted           Boolean @default(true)
-  taskBlocked             Boolean @default(true)
-  clarificationRequested  Boolean @default(true)
-  leaveRequested          Boolean @default(true)
-  leaveApproved           Boolean @default(true)
-  leaveRejected           Boolean @default(true)
-  newMessage              Boolean @default(true)
-  dailyWorkUpdate         Boolean @default(true)
-  deadlineReminder        Boolean @default(true)
+  emailEnabled           Boolean @default(true)
+  taskAssigned           Boolean @default(true)
+  taskCompleted          Boolean @default(true)
+  taskBlocked            Boolean @default(true)
+  clarificationRequested Boolean @default(true)
+  leaveRequested         Boolean @default(true)
+  leaveApproved          Boolean @default(true)
+  leaveRejected          Boolean @default(true)
+  newMessage             Boolean @default(true)
+  dailyWorkUpdate        Boolean @default(true)
+  deadlineReminder       Boolean @default(true)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  // Sales CRM — only relevant to OWNER/SALES_REP, but harmless (unused) for
+  // other roles rather than needing a separate preference model.
+  leadAssigned         Boolean @default(true)
+  meetingReminder      Boolean @default(true)
+  followUpReminder     Boolean @default(true)
+  proposalStatusChange Boolean @default(true)
+  dealStatusChange     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Attendance {
-  id          String            @id @default(cuid())
-  employee    Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  employeeId  String
-  date        DateTime          // day this record applies to (date-only, stored at midnight)
-  status      AttendanceStatus  @default(PRESENT)
-  workMode    WorkMode          @default(OFFICE)
-  clockIn     DateTime?
-  clockOut    DateTime?
-  note        String?
+  id         String           @id @default(cuid())
+  employee   Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId String
+  date       DateTime // day this record applies to (date-only, stored at midnight)
+  status     AttendanceStatus @default(PRESENT)
+  workMode   WorkMode         @default(OFFICE)
+  clockIn    DateTime?
+  clockOut   DateTime?
+  note       String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([employeeId, date])
 }
 
 model LeaveRequest {
-  id          String      @id @default(cuid())
-  employee    Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  employeeId  String
-  type        String      @default("Personal")
-  startDate   DateTime
-  endDate     DateTime
-  reason      String?
-  status      LeaveStatus @default(PENDING)
+  id         String      @id @default(cuid())
+  employee   Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId String
+  type       String      @default("Personal")
+  startDate  DateTime
+  endDate    DateTime
+  reason     String?
+  status     LeaveStatus @default(PENDING)
 
   reviewedBy   Employee? @relation("LeaveReviewedBy", fields: [reviewedById], references: [id])
   reviewedById String?
   reviewedAt   DateTime?
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Project {
-  id          String        @id @default(cuid())
-  name        String
-  client      String?
-  description String?
-  status      ProjectStatus @default(PLANNING)
+  id               String        @id @default(cuid())
+  name             String
+  client           String?
+  description      String?
+  status           ProjectStatus @default(PLANNING)
   // Progress is computed from task completion by default; set this to
   // override with a manual percentage (OWNER/MANAGER only).
   progressOverride Int?
-  startDate   DateTime?
-  deadline    DateTime?
+  startDate        DateTime?
+  deadline         DateTime?
 
   // Development resources — project-level references/identifiers only,
   // never credentials. A project can have exactly one primary repo for now;
@@ -198,41 +248,41 @@ model Project {
   // multi-repo support isn't needed yet, but every field here is scoped to
   // the project (never the employee) so it stays easy to split into a
   // ProjectDevelopmentResource model later without touching callers.
-  githubRepoUrl      String?
-  vercelProjectUrl   String?
-  claudeAccountName  String?
-  productionUrl      String?
-  stagingUrl         String?
-  developmentBranch  String?
-  techStack          String?
-  devResourceStatus  DevResourceStatus?
+  githubRepoUrl     String?
+  vercelProjectUrl  String?
+  claudeAccountName String?
+  productionUrl     String?
+  stagingUrl        String?
+  developmentBranch String?
+  techStack         String?
+  devResourceStatus DevResourceStatus?
 
-  manager     Employee? @relation("ProjectManager", fields: [managerId], references: [id])
-  managerId   String?
+  manager   Employee? @relation("ProjectManager", fields: [managerId], references: [id])
+  managerId String?
 
   assignments ProjectAssignment[]
   tasks       Task[]
   milestones  Milestone[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ProjectAssignment {
-  id          String         @id @default(cuid())
-  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  projectId   String
-  employee    Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  employeeId  String
-  role        AssignmentRole @default(CONTRIBUTOR)
+  id         String         @id @default(cuid())
+  project    Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId  String
+  employee   Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId String
+  role       AssignmentRole @default(CONTRIBUTOR)
 
   // Per-assignment dev-account context (optional override of employee defaults)
-  githubRepoUrl     String?
-  vercelProjectUrl  String?
+  githubRepoUrl    String?
+  vercelProjectUrl String?
 
-  active      Boolean   @default(true)
-  assignedAt  DateTime  @default(now())
-  removedAt   DateTime?
+  active     Boolean   @default(true)
+  assignedAt DateTime  @default(now())
+  removedAt  DateTime?
 
   @@unique([projectId, employeeId])
 }
@@ -254,19 +304,19 @@ model Task {
 
   // Acknowledgment lifecycle, tracked alongside `status` so the PM can tell
   // a task was actually seen, independent of work having started.
-  reviewedAt  DateTime?
-  acceptedAt  DateTime?
+  reviewedAt DateTime?
+  acceptedAt DateTime?
 
   // Dedupe marker for deadline-reminder emails: null, "APPROACHING", or
   // "OVERDUE". A reminder only fires again when the task moves to a worse
   // stage than the last one it was emailed for — prevents repeat spam.
   deadlineReminderStage String?
 
-  comments    TaskComment[]
+  comments TaskComment[]
 
   completedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model TaskComment {
@@ -332,14 +382,14 @@ model Message {
 }
 
 model LeavePolicy {
-  id                 String      @id @default(cuid())
-  name               String      @unique
-  period             LeavePeriod @default(ANNUAL)
-  monthlyAllowance    Int?
-  annualAllowance     Int?
-  carryForward        Boolean     @default(false)
-  maxCarryForward     Int?
-  active              Boolean     @default(true)
+  id               String      @id @default(cuid())
+  name             String      @unique
+  period           LeavePeriod @default(ANNUAL)
+  monthlyAllowance Int?
+  annualAllowance  Int?
+  carryForward     Boolean     @default(false)
+  maxCarryForward  Int?
+  active           Boolean     @default(true)
 
   updatedBy   Employee? @relation("LeavePolicyUpdatedBy", fields: [updatedById], references: [id])
   updatedById String?
@@ -349,9 +399,9 @@ model LeavePolicy {
 }
 
 model AttendanceConfig {
-  id              String @id @default("singleton")
-  officeStartTime String @default("09:30") // "HH:MM", 24-hour
-  graceMinutes    Int    @default(15)
+  id              String   @id @default("singleton")
+  officeStartTime String   @default("09:30") // "HH:MM", 24-hour
+  graceMinutes    Int      @default(15)
   updatedAt       DateTime @updatedAt
 }
 
@@ -397,4 +447,228 @@ model ActivityLog {
 
   @@index([entityType, entityId])
   @@index([actorId])
+}
+
+// ---------- Sales CRM models ----------
+// Company -> Lead -> Opportunity -> FollowUps/Meetings/Proposals/Activities
+// -> Won/Lost. Every record carries its own `assignedToId` (the owning
+// Sales Rep) rather than only inheriting it through a relation, so ownership
+// checks stay a single, uniform field lookup everywhere.
+
+model Company {
+  id             String  @id @default(cuid())
+  name           String
+  contactPerson  String?
+  designation    String?
+  email          String?
+  phone          String?
+  website        String?
+  industry       String?
+  location       String?
+  leadSource     String?
+  estimatedValue Float?
+  status         String  @default("PROSPECT")
+  notes          String?
+
+  assignedTo   Employee @relation("SalesCompanyOwner", fields: [assignedToId], references: [id])
+  assignedToId String
+
+  leads         Lead[]
+  opportunities Opportunity[]
+  followUps     FollowUp[]
+  meetings      Meeting[]
+  proposals     Proposal[]
+  activities    SalesActivity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([assignedToId])
+}
+
+model Lead {
+  id              String     @id @default(cuid())
+  companyName     String
+  contactPerson   String?
+  designation     String?
+  email           String?
+  phone           String?
+  website         String?
+  industry        String?
+  location        String?
+  source          String?
+  estimatedValue  Float?
+  status          SalesStage @default(NEW)
+  notes           String?
+  lastContactedAt DateTime?
+  nextFollowUpAt  DateTime?
+
+  company   Company? @relation(fields: [companyId], references: [id])
+  companyId String?
+
+  assignedTo   Employee @relation("SalesLeadOwner", fields: [assignedToId], references: [id])
+  assignedToId String
+
+  opportunity Opportunity?
+  followUps   FollowUp[]
+  meetings    Meeting[]
+  activities  SalesActivity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([assignedToId])
+  @@index([companyId])
+}
+
+model Opportunity {
+  id                String       @id @default(cuid())
+  name              String
+  contactPerson     String?
+  estimatedValue    Float        @default(0)
+  probability       Int          @default(50)
+  expectedCloseDate DateTime?
+  stage             SalesStage   @default(NEW)
+  priority          TaskPriority @default(MEDIUM)
+  notes             String?
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+
+  lead   Lead?   @relation(fields: [leadId], references: [id])
+  leadId String? @unique
+
+  assignedTo   Employee @relation("SalesOpportunityOwner", fields: [assignedToId], references: [id])
+  assignedToId String
+
+  followUps  FollowUp[]
+  meetings   Meeting[]
+  activities SalesActivity[]
+  proposals  Proposal[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([assignedToId])
+  @@index([companyId])
+}
+
+model FollowUp {
+  id          String       @id @default(cuid())
+  type        FollowUpType @default(CALL)
+  dueAt       DateTime
+  notes       String?
+  outcome     String?
+  completedAt DateTime?
+  // Dedupe marker for the reminder cron — set once a reminder email has
+  // been sent for the current due/overdue state, so re-runs don't repeat it.
+  remindedAt  DateTime?
+
+  company       Company?     @relation(fields: [companyId], references: [id])
+  companyId     String?
+  lead          Lead?        @relation(fields: [leadId], references: [id])
+  leadId        String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id])
+  opportunityId String?
+
+  assignedTo   Employee @relation("SalesFollowUpOwner", fields: [assignedToId], references: [id])
+  assignedToId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([assignedToId, dueAt])
+}
+
+model Meeting {
+  id            String    @id @default(cuid())
+  contactPerson String?
+  scheduledAt   DateTime
+  meetingType   String    @default("CALL")
+  location      String?
+  notes         String?
+  outcome       String?
+  nextAction    String?
+  completedAt   DateTime?
+  remindedAt    DateTime?
+
+  company       Company?     @relation(fields: [companyId], references: [id])
+  companyId     String?
+  lead          Lead?        @relation(fields: [leadId], references: [id])
+  leadId        String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id])
+  opportunityId String?
+
+  assignedTo   Employee @relation("SalesMeetingOwner", fields: [assignedToId], references: [id])
+  assignedToId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([assignedToId, scheduledAt])
+}
+
+// Lightweight activity timeline entry, either auto-recorded (status change,
+// follow-up completed, proposal sent) or manually added by the rep.
+model SalesActivity {
+  id          String @id @default(cuid())
+  type        String
+  description String
+
+  company       Company?     @relation(fields: [companyId], references: [id])
+  companyId     String?
+  lead          Lead?        @relation(fields: [leadId], references: [id])
+  leadId        String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id])
+  opportunityId String?
+
+  actor   Employee @relation("SalesActivityActor", fields: [actorId], references: [id])
+  actorId String
+
+  createdAt DateTime @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([leadId])
+  @@index([companyId])
+  @@index([opportunityId])
+}
+
+model Proposal {
+  id            String         @id @default(cuid())
+  number        String         @unique
+  contactPerson String?
+  items         String?
+  amount        Float          @default(0)
+  discount      Float          @default(0)
+  finalAmount   Float          @default(0)
+  validUntil    DateTime?
+  notes         String?
+  status        ProposalStatus @default(DRAFT)
+
+  company       Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId     String
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id])
+  opportunityId String?
+
+  assignedTo   Employee @relation("SalesProposalOwner", fields: [assignedToId], references: [id])
+  assignedToId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([assignedToId])
+}
+
+model SalesTarget {
+  id           String   @id @default(cuid())
+  employee     Employee @relation("SalesTargetOwner", fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId   String
+  year         Int
+  month        Int
+  targetAmount Float    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([employeeId, year, month])
 }

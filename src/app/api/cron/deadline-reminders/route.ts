@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { runDeadlineReminders } from "@/lib/deadline-reminders";
+import { runDeadlineReminders, runSalesReminders } from "@/lib/deadline-reminders";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +15,6 @@ export async function GET(request: Request) {
     }
   }
 
-  const result = await runDeadlineReminders();
-  return NextResponse.json({ ok: true, ...result });
+  const [tasks, sales] = await Promise.all([runDeadlineReminders(), runSalesReminders()]);
+  return NextResponse.json({ ok: true, tasks, sales });
 }

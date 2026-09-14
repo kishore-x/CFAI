@@ -21,7 +21,12 @@ type PreferenceKey =
   | "leaveRejected"
   | "newMessage"
   | "dailyWorkUpdate"
-  | "deadlineReminder";
+  | "deadlineReminder"
+  | "leadAssigned"
+  | "meetingReminder"
+  | "followUpReminder"
+  | "proposalStatusChange"
+  | "dealStatusChange";
 
 let resendClient: Resend | null | undefined;
 
@@ -384,6 +389,128 @@ export async function sendDeadlineReminderEmail(params: {
       ],
       ctaLabel: "View Task",
       ctaUrl: appLink(`/tasks/${params.taskId}`),
+    }),
+  });
+}
+
+// ---------- Sales CRM emails ----------
+
+export async function sendLeadAssignedEmail(params: {
+  recipientId: string;
+  leadId: string;
+  companyName: string;
+  contactPerson?: string | null;
+  estimatedValue?: number | null;
+  source?: string | null;
+}) {
+  await sendPreferredEmail({
+    recipientId: params.recipientId,
+    prefKey: "leadAssigned",
+    subject: `New lead assigned: ${params.companyName}`,
+    html: renderEmailHtml({
+      heading: "New lead assigned",
+      lines: [
+        { label: "Company", value: params.companyName },
+        { label: "Contact", value: params.contactPerson ?? "" },
+        { label: "Estimated value", value: params.estimatedValue ? `₹${Math.round(params.estimatedValue).toLocaleString("en-IN")}` : "" },
+        { label: "Source", value: params.source ?? "" },
+      ],
+      ctaLabel: "View Lead",
+      ctaUrl: appLink(`/sales/leads/${params.leadId}`),
+    }),
+  });
+}
+
+export async function sendMeetingReminderEmail(params: {
+  recipientId: string;
+  meetingId: string;
+  companyName: string;
+  scheduledAt: Date;
+}) {
+  await sendPreferredEmail({
+    recipientId: params.recipientId,
+    prefKey: "meetingReminder",
+    subject: `Upcoming meeting: ${params.companyName}`,
+    html: renderEmailHtml({
+      heading: "Upcoming meeting",
+      lines: [
+        { label: "Company", value: params.companyName },
+        { label: "When", value: params.scheduledAt.toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) },
+      ],
+      ctaLabel: "View Meeting",
+      ctaUrl: appLink(`/sales/meetings`),
+    }),
+  });
+}
+
+export async function sendFollowUpReminderEmail(params: {
+  recipientId: string;
+  followUpId: string;
+  companyName: string;
+  dueAt: Date;
+  overdue: boolean;
+}) {
+  await sendPreferredEmail({
+    recipientId: params.recipientId,
+    prefKey: "followUpReminder",
+    subject: params.overdue ? `Overdue follow-up: ${params.companyName}` : `Follow-up due today: ${params.companyName}`,
+    html: renderEmailHtml({
+      heading: params.overdue ? "Follow-up overdue" : "Follow-up due today",
+      lines: [
+        { label: "Company", value: params.companyName },
+        { label: "Due", value: params.dueAt.toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) },
+      ],
+      ctaLabel: "View Follow-ups",
+      ctaUrl: appLink(`/sales/follow-ups`),
+    }),
+  });
+}
+
+export async function sendProposalStatusChangeEmail(params: {
+  recipientId: string;
+  proposalId: string;
+  proposalNumber: string;
+  companyName: string;
+  status: string;
+}) {
+  await sendPreferredEmail({
+    recipientId: params.recipientId,
+    prefKey: "proposalStatusChange",
+    subject: `Proposal ${params.proposalNumber} — ${params.status}`,
+    html: renderEmailHtml({
+      heading: "Proposal status changed",
+      lines: [
+        { label: "Proposal", value: params.proposalNumber },
+        { label: "Company", value: params.companyName },
+        { label: "Status", value: params.status },
+      ],
+      ctaLabel: "View Proposal",
+      ctaUrl: appLink(`/sales/proposals`),
+    }),
+  });
+}
+
+export async function sendDealStatusChangeEmail(params: {
+  recipientId: string;
+  opportunityId: string;
+  opportunityName: string;
+  companyName: string;
+  won: boolean;
+  estimatedValue: number;
+}) {
+  await sendPreferredEmail({
+    recipientId: params.recipientId,
+    prefKey: "dealStatusChange",
+    subject: params.won ? `Deal won: ${params.opportunityName}` : `Deal lost: ${params.opportunityName}`,
+    html: renderEmailHtml({
+      heading: params.won ? "Deal won 🎉" : "Deal lost",
+      lines: [
+        { label: "Opportunity", value: params.opportunityName },
+        { label: "Company", value: params.companyName },
+        { label: "Value", value: `₹${Math.round(params.estimatedValue).toLocaleString("en-IN")}` },
+      ],
+      ctaLabel: "View Pipeline",
+      ctaUrl: appLink(`/sales/pipeline`),
     }),
   });
 }

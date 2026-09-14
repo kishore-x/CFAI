@@ -31,6 +31,8 @@ async function main() {
     { name: "Rahul Mehta", email: "rahul@clickfieldai.com", title: "Frontend Developer", department: "Engineering", role: "DEVELOPER" as const, githubUsername: "rahulm", claudeAccountLabel: "eng-seat-2", vercelUsername: "rahul-mehta" },
     { name: "Priya Nair", email: "priya@clickfieldai.com", title: "UI/UX Designer", department: "Design", role: "DEVELOPER" as const, githubUsername: "priyan", claudeAccountLabel: "design-seat-1", vercelUsername: "priya-nair" },
     { name: "Vikram Singh", email: "vikram@clickfieldai.com", title: "Backend Developer", department: "Engineering", role: "DEVELOPER" as const, githubUsername: "vikrams", claudeAccountLabel: "eng-seat-3", vercelUsername: "vikram-singh" },
+    { name: "Meera Krishnan", email: "meera@clickfieldai.com", title: "Sales Representative", department: "Sales", role: "SALES_REP" as const, githubUsername: null, claudeAccountLabel: null, vercelUsername: null },
+    { name: "Arjun Nambiar", email: "arjun@clickfieldai.com", title: "Sales Representative", department: "Sales", role: "SALES_REP" as const, githubUsername: null, claudeAccountLabel: null, vercelUsername: null },
   ];
 
   const credentials: { name: string; email: string; role: string; password: string }[] = [];

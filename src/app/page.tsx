@@ -3,11 +3,12 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Card, StatCard, ProjectStatusBadge, AttendanceBadge, TaskStatusBadge, Avatar, fmtTime } from "@/lib/ui";
-import { requireUser, isOwner, hasCompanyWideView } from "@/lib/authorize";
+import { requireUser, isOwner, hasCompanyWideView, isSalesRep } from "@/lib/authorize";
 import { AssignTaskForm } from "@/app/tasks/assign-task-form";
 import { DailyUpdateForm } from "@/app/daily-updates/daily-update-form";
 import { getDeveloperWorkload } from "@/lib/services";
 import { HScrollContainer } from "@/app/h-scroll-container";
+import { SalesRepDashboard } from "@/app/sales/sales-dashboard";
 
 function startOfDay(d: Date) {
   const c = new Date(d);
@@ -39,6 +40,7 @@ export default async function OverviewPage() {
   const today = startOfDay(new Date());
 
   if (hasCompanyWideView(user)) return <CompanyDashboard user={user} today={today} />;
+  if (isSalesRep(user)) return <SalesRepDashboard userId={user.id} userName={user.name ?? "there"} />;
   return <DeveloperDashboard user={user} today={today} />;
 }
 

@@ -12,6 +12,7 @@ const NAV_BY_ROLE: Record<string, { href: string; label: string }[]> = {
     { href: "/leave", label: "Leave" },
     { href: "/projects", label: "Projects" },
     { href: "/tasks", label: "Tasks" },
+    { href: "/sales", label: "Sales" },
     { href: "/messages", label: "Messages" },
     { href: "/reports", label: "Reports" },
     { href: "/notifications", label: "Notifications" },
@@ -41,12 +42,29 @@ const NAV_BY_ROLE: Record<string, { href: string; label: string }[]> = {
     { href: "/notifications", label: "Notifications" },
     { href: "/settings", label: "Settings" },
   ],
+  SALES_REP: [
+    { href: "/", label: "Dashboard" },
+    { href: "/sales/leads", label: "Leads" },
+    { href: "/sales/companies", label: "Companies" },
+    { href: "/sales/pipeline", label: "Pipeline" },
+    { href: "/sales/follow-ups", label: "Follow-ups" },
+    { href: "/sales/meetings", label: "Meetings" },
+    { href: "/sales/proposals", label: "Proposals" },
+    { href: "/sales/activities", label: "Activities" },
+    { href: "/sales/targets", label: "Targets" },
+    { href: "/sales/reports", label: "Reports" },
+    { href: "/messages", label: "Messages" },
+    { href: "/notifications", label: "Notifications" },
+    { href: "/employees", label: "Profile" },
+    { href: "/settings", label: "Settings" },
+  ],
 };
 
 const ROLE_LABEL: Record<string, string> = {
   OWNER: "Owner",
   MANAGER: "Project Manager",
   DEVELOPER: "Developer",
+  SALES_REP: "Sales Rep",
 };
 
 export function Header({

@@ -46,6 +46,42 @@ export function DevResourceStatusBadge({ status }: { status: string }) {
   );
 }
 
+const SALES_STAGE_STYLES: Record<string, string> = {
+  NEW: "border border-[var(--border)] text-[var(--muted)]",
+  CONTACTED: "border border-white/40 text-[var(--foreground)]",
+  QUALIFIED: "bg-gray-700 text-white",
+  MEETING: "bg-gray-700 text-white",
+  PROPOSAL: "bg-gray-400 text-black",
+  NEGOTIATION: "bg-gray-400 text-black",
+  WON: "bg-white text-black",
+  LOST: "border border-dashed border-white/40 text-[var(--muted)] line-through",
+};
+
+export function SalesStageBadge({ status }: { status: string }) {
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${SALES_STAGE_STYLES[status] ?? "border border-[var(--border)]"}`}>
+      {status}
+    </span>
+  );
+}
+
+const PROPOSAL_STATUS_STYLES: Record<string, string> = {
+  DRAFT: "border border-[var(--border)] text-[var(--muted)]",
+  SENT: "border border-white/40 text-[var(--foreground)]",
+  VIEWED: "bg-gray-700 text-white",
+  NEGOTIATION: "bg-gray-400 text-black",
+  ACCEPTED: "bg-white text-black",
+  REJECTED: "border border-dashed border-white/40 text-[var(--muted)] line-through",
+};
+
+export function ProposalStatusBadge({ status }: { status: string }) {
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${PROPOSAL_STATUS_STYLES[status] ?? "border border-[var(--border)]"}`}>
+      {status}
+    </span>
+  );
+}
+
 const TASK_STATUS_STYLES: Record<string, string> = {
   TODO: "border border-[var(--border)] text-[var(--muted)]",
   IN_PROGRESS: "bg-gray-700 text-white",

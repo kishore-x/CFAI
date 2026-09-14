@@ -80,6 +80,11 @@ const EMAIL_PREF_KEYS = [
   "newMessage",
   "dailyWorkUpdate",
   "deadlineReminder",
+  "leadAssigned",
+  "meetingReminder",
+  "followUpReminder",
+  "proposalStatusChange",
+  "dealStatusChange",
 ] as const;
 
 type EmailPrefKey = (typeof EMAIL_PREF_KEYS)[number];

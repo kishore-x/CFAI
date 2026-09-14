@@ -15,6 +15,11 @@ export type NotificationPrefs = {
   newMessage: boolean;
   dailyWorkUpdate: boolean;
   deadlineReminder: boolean;
+  leadAssigned: boolean;
+  meetingReminder: boolean;
+  followUpReminder: boolean;
+  proposalStatusChange: boolean;
+  dealStatusChange: boolean;
 };
 
 type ItemKey = Exclude<keyof NotificationPrefs, "emailEnabled">;
@@ -48,9 +53,21 @@ const GROUPS: { title: string; items: { key: ItemKey; label: string }[] }[] = [
   },
 ];
 
-export function NotificationPreferencesForm({ initial }: { initial: NotificationPrefs }) {
+const SALES_GROUP: { title: string; items: { key: ItemKey; label: string }[] } = {
+  title: "Sales",
+  items: [
+    { key: "leadAssigned", label: "Lead assigned" },
+    { key: "meetingReminder", label: "Meeting reminders" },
+    { key: "followUpReminder", label: "Follow-up reminders" },
+    { key: "proposalStatusChange", label: "Proposal status change" },
+    { key: "dealStatusChange", label: "Deal won/lost" },
+  ],
+};
+
+export function NotificationPreferencesForm({ initial, showSales }: { initial: NotificationPrefs; showSales?: boolean }) {
   const [prefs, setPrefs] = useState(initial);
   const [isPending, startTransition] = useTransition();
+  const groups = showSales ? [...GROUPS, SALES_GROUP] : GROUPS;
 
   function toggle(key: keyof NotificationPrefs) {
     const value = !prefs[key];
@@ -77,7 +94,7 @@ export function NotificationPreferencesForm({ initial }: { initial: Notification
       </div>
 
       <div className={`grid sm:grid-cols-2 gap-5 transition-opacity ${!prefs.emailEnabled ? "opacity-40 pointer-events-none" : ""}`}>
-        {GROUPS.map((g) => (
+        {groups.map((g) => (
           <div key={g.title}>
             <div className="text-xs font-medium text-[var(--muted)] mb-2">{g.title}</div>
             <div className="space-y-2">

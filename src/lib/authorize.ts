@@ -112,6 +112,37 @@ export function canReviewLeave(user: SessionUser) {
   return hasCompanyWideView(user);
 }
 
+// ---------- Sales CRM ----------
+// A separate workspace from the project-management side of the app. OWNER
+// has full company-wide visibility; SALES_REP sees and manages only records
+// assigned to them. MANAGER and DEVELOPER get no access at all (per product
+// spec — PM does not automatically inherit Sales CRM access).
+
+/** Whether this user can use the Sales CRM workspace at all. */
+export function canAccessSalesCRM(user: SessionUser): boolean {
+  return isOwner(user) || isSalesRep(user);
+}
+
+export function assertSalesCRMAccess(user: SessionUser) {
+  if (!canAccessSalesCRM(user)) throw new ForbiddenError("Sales CRM access required");
+}
+
+/** Sales rep ids whose records this user may see. OWNER: everyone. SALES_REP: only themselves. Anyone else: none. */
+export function visibleSalesRepIds(user: SessionUser): string[] | "ALL" {
+  if (isOwner(user)) return "ALL";
+  if (isSalesRep(user)) return [user.id];
+  return [];
+}
+
+/** A sales record (lead/company/opportunity/follow-up/meeting/proposal/activity) is visible if owned by this user, or the user is Owner. */
+export function canAccessSalesRecord(user: SessionUser, assignedToId: string): boolean {
+  return isOwner(user) || (isSalesRep(user) && assignedToId === user.id);
+}
+
+export function assertCanAccessSalesRecord(user: SessionUser, assignedToId: string) {
+  if (!canAccessSalesRecord(user, assignedToId)) throw new ForbiddenError("Not permitted to access this sales record");
+}
+
 export async function canAccessConversation(user: SessionUser, conversationId: string): Promise<boolean> {
   const participant = await prisma.conversationParticipant.findUnique({
     where: { conversationId_employeeId: { conversationId, employeeId: user.id } },
