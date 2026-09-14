@@ -7,8 +7,11 @@ const { auth } = NextAuth(authConfig);
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const isAuthRoute = req.nextUrl.pathname.startsWith("/login") || req.nextUrl.pathname.startsWith("/api/auth");
+  // Cron-triggered routes authenticate themselves via a CRON_SECRET bearer
+  // token (see src/app/api/cron/*), not a user session — never redirect them.
+  const isCronRoute = req.nextUrl.pathname.startsWith("/api/cron");
 
-  if (isAuthRoute) return NextResponse.next();
+  if (isAuthRoute || isCronRoute) return NextResponse.next();
 
   if (!isLoggedIn) {
     const loginUrl = new URL("/login", req.nextUrl.origin);
