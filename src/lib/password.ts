@@ -8,9 +8,21 @@ export function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
+// Two-word-plus-number passphrase (e.g. "Cedar-Comet-47") rather than
+// random gibberish — easy to read aloud, text, or type on a phone. These
+// are one-time: every account forces a real password on first login.
+const TEMP_PASSWORD_WORDS = [
+  "Falcon", "Comet", "Tiger", "Maple", "River", "Cedar", "Coral", "Orbit",
+  "Nova", "Ember", "Basil", "Quartz", "Delta", "Harbor", "Willow", "Granite",
+  "Meadow", "Zephyr", "Amber", "Cobalt", "Lumen", "Summit", "Anchor", "Pixel",
+];
+
 export function generateTempPassword() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-  let out = "";
-  for (let i = 0; i < 10; i++) out += chars[Math.floor(Math.random() * chars.length)];
-  return out;
+  const first = TEMP_PASSWORD_WORDS[Math.floor(Math.random() * TEMP_PASSWORD_WORDS.length)];
+  let second = TEMP_PASSWORD_WORDS[Math.floor(Math.random() * TEMP_PASSWORD_WORDS.length)];
+  while (second === first) {
+    second = TEMP_PASSWORD_WORDS[Math.floor(Math.random() * TEMP_PASSWORD_WORDS.length)];
+  }
+  const number = Math.floor(10 + Math.random() * 90);
+  return `${first}-${second}-${number}`;
 }
