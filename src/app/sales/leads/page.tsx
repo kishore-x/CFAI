@@ -37,6 +37,12 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   const reps = owner ? await prisma.employee.findMany({ where: { role: "SALES_REP", active: true }, select: { id: true, name: true }, orderBy: { name: "asc" } }) : [];
   const sources = Array.from(new Set(leads.map((l) => l.source).filter(Boolean))) as string[];
 
+  const exportParams = new URLSearchParams();
+  if (status) exportParams.set("status", status);
+  if (source) exportParams.set("source", source);
+  if (q) exportParams.set("q", q);
+  const exportHref = `/api/sales/leads/export${exportParams.toString() ? `?${exportParams.toString()}` : ""}`;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -44,7 +50,12 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
           <h1 className="text-2xl font-semibold tracking-tight">Leads</h1>
           <p className="text-sm text-[var(--muted)] mt-1">{leads.length} leads</p>
         </div>
-        <LeadForm reps={reps} />
+        <div className="flex items-center gap-2">
+          <a href={exportHref} className="text-xs font-medium px-3 py-1.5 rounded-md border border-[var(--border)] hover:bg-white/10">
+            Export to Excel
+          </a>
+          <LeadForm reps={reps} />
+        </div>
       </div>
 
       <Card className="p-3">
