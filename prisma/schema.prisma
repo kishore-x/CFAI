@@ -151,14 +151,15 @@ model Employee {
 
   // Sales CRM — records this employee owns/is assigned (SALES_REP), or has
   // set targets for / logged activity on (OWNER can act on anyone's).
-  salesCompanies     Company[]       @relation("SalesCompanyOwner")
-  salesLeads         Lead[]          @relation("SalesLeadOwner")
-  salesOpportunities Opportunity[]   @relation("SalesOpportunityOwner")
-  salesFollowUps     FollowUp[]      @relation("SalesFollowUpOwner")
-  salesMeetings      Meeting[]       @relation("SalesMeetingOwner")
-  salesProposals     Proposal[]      @relation("SalesProposalOwner")
-  salesActivities    SalesActivity[] @relation("SalesActivityActor")
-  salesTargets       SalesTarget[]   @relation("SalesTargetOwner")
+  salesCompanies     Company[]         @relation("SalesCompanyOwner")
+  salesLeads         Lead[]            @relation("SalesLeadOwner")
+  salesOpportunities Opportunity[]     @relation("SalesOpportunityOwner")
+  salesFollowUps     FollowUp[]        @relation("SalesFollowUpOwner")
+  salesMeetings      Meeting[]         @relation("SalesMeetingOwner")
+  salesProposals     Proposal[]        @relation("SalesProposalOwner")
+  salesActivities    SalesActivity[]   @relation("SalesActivityActor")
+  salesTargets       SalesTarget[]     @relation("SalesTargetOwner")
+  uploadedDocuments  ProjectDocument[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -263,6 +264,7 @@ model Project {
   assignments ProjectAssignment[]
   tasks       Task[]
   milestones  Milestone[]
+  documents   ProjectDocument[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -419,6 +421,33 @@ model Milestone {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// A project-level document (uploaded file, stored in Vercel Blob) or an
+// external meeting link (recording, notes doc, etc.) — e.g. what an Owner
+// or PM brings back from a client meeting. Viewable by anyone with access
+// to the project; only Owner/PM can add or remove.
+enum ProjectDocumentType {
+  DOCUMENT
+  MEETING_LINK
+}
+
+model ProjectDocument {
+  id        String              @id @default(cuid())
+  project   Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  type      ProjectDocumentType
+  title     String
+  url       String
+  fileName  String?
+  fileSize  Int?
+
+  uploadedBy   Employee @relation(fields: [uploadedById], references: [id])
+  uploadedById String
+
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
 }
 
 model Notification {

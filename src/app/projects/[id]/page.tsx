@@ -9,6 +9,7 @@ import { MemberList } from "../member-list";
 import { TaskList } from "../task-list";
 import { MilestoneList } from "../milestone-list";
 import { DevResourcesCard } from "../dev-resources-card";
+import { ProjectDocumentsCard } from "../project-documents-card";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -45,6 +46,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   });
 
   const milestones = await prisma.milestone.findMany({ where: { projectId: id }, orderBy: [{ order: "asc" }, { dueDate: "asc" }] });
+  const documents = await prisma.projectDocument.findMany({ where: { projectId: id }, include: { uploadedBy: { select: { name: true } } }, orderBy: { createdAt: "desc" } });
 
   let deadlineNote: { icon: string; text: string } | null = null;
   if (project.deadline) {
@@ -143,6 +145,21 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           }}
         />
       </div>
+
+      <ProjectDocumentsCard
+        projectId={project.id}
+        canManage={canManage}
+        documents={documents.map((d) => ({
+          id: d.id,
+          type: d.type,
+          title: d.title,
+          url: d.url,
+          fileName: d.fileName,
+          fileSize: d.fileSize,
+          uploadedByName: d.uploadedBy.name,
+          createdAt: d.createdAt.toISOString(),
+        }))}
+      />
 
       <Card className="p-5">
         <TaskList
