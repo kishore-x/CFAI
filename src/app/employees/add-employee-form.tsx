@@ -76,6 +76,7 @@ export function AddEmployeeForm() {
             <option value="OWNER">Owner</option>
             <option value="MANAGER">Project Manager</option>
             <option value="DEVELOPER">Developer</option>
+            <option value="SALES_REP">Sales Rep</option>
           </select>
           <div className="sm:col-span-2 flex items-center gap-3">
             <button

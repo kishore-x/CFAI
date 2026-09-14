@@ -11,10 +11,12 @@ export async function getOrCreateConversation(otherEmployeeId: string): Promise<
   const user = await requireUser();
   if (otherEmployeeId === user.id) throw new Error("Cannot start a conversation with yourself");
 
-  // A developer may only chat with company-wide users (PM/Owner); PM/Owner may chat with anyone.
+  // A non-company-wide user (developer/sales rep) may only chat with company-wide users (PM/Owner); PM/Owner may chat with anyone.
   if (!hasCompanyWideView(user)) {
     const other = await prisma.employee.findUniqueOrThrow({ where: { id: otherEmployeeId } });
-    if (other.role === "DEVELOPER") throw new ForbiddenError("Developers can only message the Project Manager or Owners");
+    if (other.role === "DEVELOPER" || other.role === "SALES_REP") {
+      throw new ForbiddenError("You can only message the Project Manager or Owners");
+    }
   }
 
   const existing = await prisma.conversation.findFirst({

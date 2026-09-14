@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { updateEmployeeRole, setEmployeeActive } from "@/app/actions";
 
-const ROLES = ["OWNER", "MANAGER", "DEVELOPER"];
+const ROLES = ["OWNER", "MANAGER", "DEVELOPER", "SALES_REP"];
 
 export function EmployeeControls({ employeeId, role, active }: { employeeId: string; role: string; active: boolean }) {
   const [isPending, startTransition] = useTransition();

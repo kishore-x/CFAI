@@ -27,6 +27,9 @@ export function isManager(user: SessionUser) {
 export function isDeveloper(user: SessionUser) {
   return user.role === "DEVELOPER";
 }
+export function isSalesRep(user: SessionUser) {
+  return user.role === "SALES_REP";
+}
 
 /**
  * OWNER and MANAGER both have company-wide *operational* visibility and
